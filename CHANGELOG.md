@@ -29,12 +29,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this pr
   Equivalence is declared rather than inferred: a prefix-stripping heuristic would also accept a
   wrong card whose name shared a tail.
 
+- **Check 1 — link topology.** `self_link` and `dangling_link` build fully. `undeclared_input`
+  takes an optional injected `NodeSchema` and returns NOT_APPLICABLE naming itself when none is
+  supplied; a class absent from a supplied schema is reported as unknown rather than assumed to
+  pass. The schema is never inferred from the corpus.
+- **Check 4 — graph-saved-is-graph-submitted**, compared as parsed graphs: node sets, class
+  types, input names, link targets, literal values. Numbers compare numerically, so a seed
+  rendered `770700` or `770700.0` is not a change.
+- **Check 5 — generator-legal frame**, against the **effective** frame per the spec's Amendment 1:
+  graph literals where declared, the caller-supplied input dimensions on img2img, and
+  NOT_APPLICABLE naming what it could not see otherwise. Qwen's ÷8 is the only measured family;
+  six others are declared absent and return NOT_APPLICABLE rather than borrowing a divisor. ÷8
+  halts, ÷16 advises.
+
 ### Not yet built
-- Checks 1, 3, 4, 6, 7. See the build-state table in [README.md](README.md) — it is the honest
-  state of the repo, not a roadmap.
-- Check 1's third clause (*an input the class does not declare*) needs a node-schema source.
-  ComfyUI serves one at `/object_info`, and this package makes no network calls by design, so
-  the schema has to be injected by the caller. Unresolved, and named rather than guessed at.
+- Checks 3, 6, 7. See the build-state table in [README.md](README.md) — it is the honest state of
+  the repo, not a roadmap.
+- Check 1 does not detect orphans (a node whose output nothing reads). A candidate clause, named
+  rather than silently absent — a graph may legitimately carry one.
 - Check 5 (generator-legal frame) is **specification open**, not merely unbuilt: across 70
   recorded workflow graphs there is no dimension input to read, because every one is an
   img2img topology whose frame is inherited from the input image.

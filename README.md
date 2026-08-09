@@ -29,21 +29,93 @@ This repo is **under construction**. The table is the honest state, not a roadma
 
 | # | check | halts on | state |
 |---|---|---|---|
-| 1 | Link topology | a node input referencing its own node; a link to a node id not in the graph; an input the class does not declare | **not built** |
-| 2 | Inverted register scan | a declared register that does not match the graph's actual construction — **in both directions** | ✅ **built** — `check_register_scan`; all 70 recorded graphs pass under their own register, and each failure direction fires on a one-edit mutation of a real one |
+| # | check | halts on | state |
+|---|---|---|---|
+| 1 | Link topology | a node input referencing its own node; a link to a node id not in the graph; an input the class does not declare | ✅ **built** — 2 clauses of 3; `undeclared_input` needs an injected schema and declines without one |
+| 2 | Inverted register scan | a declared register that does not match the graph's actual construction — **in both directions** | ✅ **built** — both directions |
 | 3 | Recipe-vs-profile agreement, by value | a parameter reaching the graph that disagrees with the subject profile | **not built** |
-| 4 | Graph-saved-is-graph-submitted | saved sidecar and submitted payload differing **as parsed graphs** | **not built** |
-| 5 | Generator-legal frame | a dimension the model family's VAE cannot decode at | **specification open** — see below |
-| 6 | Estimate before submit | a missing or unread credit estimate | **not built** |
+| 4 | Graph-saved-is-graph-submitted | saved sidecar and submitted payload differing **as parsed graphs** | ✅ **built** |
+| 5 | Generator-legal frame | a dimension the effective frame's VAE cannot decode at | ✅ **built** — Qwen only; every other family declared-absent |
+| 6 | Estimate before submit | a missing or unread credit estimate | **not built** — transport-side |
 | 7 | Anchor reproduction | a recorded graph that no longer rebuilds from its recorded inputs | **not built** |
 
-**Check 5's operand is missing from every fixture we have.** Across 70 recorded workflow
-graphs there are zero `width`/`height`/`resolution` inputs and no `EmptyLatentImage` node —
-every one is an img2img topology (`LoadImage → VAEEncode → KSampler → VAEDecode`) whose frame
-is inherited from the uploaded image rather than declared in the graph. The defect this check
-exists for (a width of 1066 decoding as 1064 on a ÷8 VAE) happened in frame-derivation code
-*upstream of the graph*. A check that finds nothing to check and returns PASS is not a check,
-so check 5 ships only once its verdict set can express *frame-not-in-graph* honestly.
+Every built check passes on **all 70 recorded graphs** (the no-false-halt leg) and fires on a
+one-edit mutation of a real one, so the passing case and the failing case differ by exactly the
+edit under test. **103 tests, green under normal interpretation, `python -O`, and
+`PYTHONOPTIMIZE=1`.**
+
+### What the built checks do NOT cover
+
+- **Check 1's third clause** (*an input the class does not declare*) requires a node schema.
+  ComfyUI serves one at `/object_info`; this package makes no network calls, so the schema is a
+  parameter. Without it the clause returns NOT_APPLICABLE **naming itself** — and it is
+  deliberately not inferred from the corpus, because deriving a gate's reference from the thing
+  it gates makes it a tautology. A class absent from a supplied schema is reported as unknown
+  rather than assumed to pass.
+- **Check 1 does not detect orphans** (a node whose output nothing reads). A graph may
+  legitimately carry one; it is a candidate clause, not an omission.
+- **Check 5 knows one family.** Qwen's ÷8 is measured. `sdxl`, `sd15`, `flux`, `wan`, `hunyuan`
+  and `chroma` are **declared absent** and return NOT_APPLICABLE rather than borrowing another
+  family's divisor — an unmeasured entry either halts correct work or passes the defect it was
+  added for.
+- **Check 5 returns NOT_APPLICABLE on all 70 recorded graphs** unless the caller supplies the
+  input image's dimensions. That is the honest result on an img2img corpus, not a gap: see below.
+- **Check 4 answers the value question, not the byte question.** Both live in this repo and they
+  are different: the fixture manifest asserts byte-identity with the recorded artifact, and check
+  4 asserts that no *value* moved between save and submit.
+
+## Check 1 — link topology, and the case that started all this
+
+```python
+from comfy_preflight.graph import Graph
+from comfy_preflight.checks import check_link_topology
+
+check_link_topology(Graph.from_api_dict(graph_json))
+```
+
+```
+check_1_link_topology HALT (1 defect(s)):
+  - SELF_LINK [node 14.samples]: input reads slot 0 of its own node (14); a node cannot
+    be its own producer
+    hint: repoint this input at the node that actually produces the value. A provider
+    dry_run has returned `validated` on exactly this defect, so a passing pre-flight
+    elsewhere is not evidence against it
+```
+
+That is the recorded incident, reproduced by repointing `node 14.samples` from `['13', 0]` to
+`['14', 0]` in the graph that was actually in it. **The corpus carries 0 self-links and 0
+dangling links across all 70 graphs** — so there is no naturally-occurring failing fixture, and
+the break is constructed by one documented edit.
+
+## Check 5 — the effective frame, not the declared one
+
+`1066 / 8 = 133.25` encodes to 133 latent columns and decodes to **1064**, putting every output
+2 px off its control image and breaking every downstream pairing.
+
+**The defect happened upstream of the graph.** The record is explicit that the 1066 was derived
+correctly from a mesh bounding box; the image was rendered at that width and uploaded, and the
+graph never declared it. So a check that read graph literals could not have caught the incident
+that motivates it. The operand is the frame the run will actually produce:
+
+| case | operand | verdict |
+|---|---|---|
+| the graph declares dimensions | the literals | PASS / HALT |
+| img2img and the caller has the input | **the input image's dimensions** | PASS / HALT |
+| neither | — | NOT_APPLICABLE, naming what it could not see |
+
+```python
+check_generator_legal_frame(graph, family="qwen", input_dimensions=(1072, 1024))   # PASS
+check_generator_legal_frame(graph, family="qwen", input_dimensions=(1066, 1024))   # HALT
+check_generator_legal_frame(graph, family="qwen")                                  # NOT_APPLICABLE
+```
+
+`input_dimensions` is a parameter, not an architecture: **the production gate runs in-process on
+the submit path, where the image is in hand by construction**, and the CLI degrades to
+NOT_APPLICABLE. This package does not decode images — dimensions in, verdict out.
+
+**÷8 halts; ÷16 advises.** The constraint is *"÷8 is the floor, prefer ÷16"* — a floor and a
+preference, not two floors. 1064 is ÷8-legal and ÷16-short: it passes with an advisory note.
+Promoting the preference to a halt would fire on every legal ÷8 frame.
 
 ## Check 2 — the inverted register scan
 
