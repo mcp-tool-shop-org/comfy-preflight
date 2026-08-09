@@ -1,0 +1,95 @@
+{
+  "1": {
+    "class_type": "UNETLoader",
+    "inputs": { "unet_name": "qwen_image_fp8_e4m3fn.safetensors", "weight_dtype": "default" }
+  },
+  "2": {
+    "class_type": "CLIPLoader",
+    "inputs": { "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors", "type": "qwen_image", "device": "default" }
+  },
+  "3": {
+    "class_type": "VAELoader",
+    "inputs": { "vae_name": "qwen_image_vae.safetensors" }
+  },
+  "4": {
+    "class_type": "ControlNetLoader",
+    "inputs": { "control_net_name": "Qwen-Image-InstantX-ControlNet-Union.safetensors" }
+  },
+  "5": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": ["1", 0],
+      "lora_name": "mikeyfrilot__saltroad-lora__saltroad_style_v2_lowlr_000001500.safetensors",
+      "strength_model": 0.75
+    }
+  },
+  "6": {
+    "class_type": "ModelSamplingAuraFlow",
+    "inputs": { "model": ["5", 0], "shift": 3.1 }
+  },
+  "7": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": ["2", 0],
+      "text": "a burly bald warrior with a long red beard, dark green knitted sleeveless tunic, polished gold pauldrons, gold necklace, dark red layered cloth skirt with a leather belt, brown leather bracers, a gold plate on each outer forearm, gold knee plates, heavy dark boots, holding a massive greatsword, plain grey background, visible brushstrokes, painterly worked surface"
+    }
+  },
+  "8": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": ["2", 0],
+      "text": "braided belt, plaited belt, woven belt, rope belt, shoulder strap, chest strap, baldric, bandolier, watermark, text, logo, blurry, photo, deformed"
+    }
+  },
+  "9": {
+    "class_type": "LoadImage",
+    "_comment": "THE RENDER — becomes the LATENT via node 12. Not interchangeable with node 10.",
+    "inputs": { "image": "420a567392d393065b461676cbef04899d7570440ba01f72d7d4729e45de0e1d.png" }
+  },
+  "10": {
+    "class_type": "LoadImage",
+    "_comment": "THE CONTROL — goes to the ControlNet via node 11. Not interchangeable with node 9.",
+    "inputs": { "image": "29afb4bdefc04112111d347a52d4c7833be1a703e2dda49dd180ec346bad77b6.png" }
+  },
+  "11": {
+    "class_type": "ControlNetApplyAdvanced",
+    "inputs": {
+      "positive": ["7", 0],
+      "negative": ["8", 0],
+      "control_net": ["4", 0],
+      "image": ["10", 0],
+      "vae": ["3", 0],
+      "strength": 0.9,
+      "start_percent": 0.0,
+      "end_percent": 1.0
+    }
+  },
+  "12": {
+    "class_type": "VAEEncode",
+    "inputs": { "pixels": ["9", 0], "vae": ["3", 0] }
+  },
+  "13": {
+    "class_type": "KSampler",
+    "_comment": "positive is node 11 OUTPUT 0, negative is node 11 OUTPUT 1. seed must not advance between runs.",
+    "inputs": {
+      "model": ["6", 0],
+      "seed": 770700,
+      "steps": 20,
+      "cfg": 2.5,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": ["11", 0],
+      "negative": ["11", 1],
+      "latent_image": ["12", 0],
+      "denoise": 0.92
+    }
+  },
+  "14": {
+    "class_type": "VAEDecode",
+    "inputs": { "samples": ["13", 0], "vae": ["3", 0] }
+  },
+  "15": {
+    "class_type": "SaveImage",
+    "inputs": { "images": ["14", 0], "filename_prefix": "restylize" }
+  }
+}

@@ -1,0 +1,162 @@
+{
+ "1": {
+  "class_type": "UNETLoader",
+  "inputs": {
+   "unet_name": "qwen_image_fp8_e4m3fn.safetensors",
+   "weight_dtype": "default"
+  }
+ },
+ "10": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "efe00130b0f388184fe9e9b922a68edda5d612bd6ed90ea0d630c673c484befd.png"
+  }
+ },
+ "11": {
+  "class_type": "ControlNetApplyAdvanced",
+  "inputs": {
+   "control_net": [
+    "4",
+    0
+   ],
+   "end_percent": 1.0,
+   "image": [
+    "10",
+    0
+   ],
+   "negative": [
+    "8",
+    0
+   ],
+   "positive": [
+    "7",
+    0
+   ],
+   "start_percent": 0.0,
+   "strength": 0.9,
+   "vae": [
+    "3",
+    0
+   ]
+  }
+ },
+ "12": {
+  "class_type": "VAEEncode",
+  "inputs": {
+   "pixels": [
+    "9",
+    0
+   ],
+   "vae": [
+    "3",
+    0
+   ]
+  }
+ },
+ "13": {
+  "class_type": "KSampler",
+  "inputs": {
+   "cfg": 2.5,
+   "denoise": 0.92,
+   "latent_image": [
+    "12",
+    0
+   ],
+   "model": [
+    "6",
+    0
+   ],
+   "negative": [
+    "11",
+    1
+   ],
+   "positive": [
+    "11",
+    0
+   ],
+   "sampler_name": "euler",
+   "scheduler": "simple",
+   "seed": 770700,
+   "steps": 20
+  }
+ },
+ "14": {
+  "class_type": "VAEDecode",
+  "inputs": {
+   "samples": [
+    "13",
+    0
+   ],
+   "vae": [
+    "3",
+    0
+   ]
+  }
+ },
+ "15": {
+  "class_type": "SaveImage",
+  "inputs": {
+   "filename_prefix": "dragon_head_companion_y0",
+   "images": [
+    "14",
+    0
+   ]
+  }
+ },
+ "2": {
+  "class_type": "CLIPLoader",
+  "inputs": {
+   "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+   "device": "default",
+   "type": "qwen_image"
+  }
+ },
+ "3": {
+  "class_type": "VAELoader",
+  "inputs": {
+   "vae_name": "qwen_image_vae.safetensors"
+  }
+ },
+ "4": {
+  "class_type": "ControlNetLoader",
+  "inputs": {
+   "control_net_name": "Qwen-Image-InstantX-ControlNet-Union.safetensors"
+  }
+ },
+ "6": {
+  "class_type": "ModelSamplingAuraFlow",
+  "inputs": {
+   "model": [
+    "1",
+    0
+   ],
+   "shift": 3.1
+  }
+ },
+ "7": {
+  "class_type": "CLIPTextEncode",
+  "inputs": {
+   "clip": [
+    "2",
+    0
+   ],
+   "text": "a winged dragon, deep moss-green scaled hide, pale bone-tan ventral plates, storm-grey wing membranes, bone-ivory curved horns, bone-ivory crown and cheek spikes, ember-orange eyes, a dark wine-red tongue, pale ivory fangs and tooth rows, a dark slate mouth interior, plain lavender-grey background, ultra-realistic, menacing, sharp scale relief, harsh directional light"
+  }
+ },
+ "8": {
+  "class_type": "CLIPTextEncode",
+  "inputs": {
+   "clip": [
+    "2",
+    0
+   ],
+   "text": "watermark, text, logo, blurry, photo, deformed"
+  }
+ },
+ "9": {
+  "class_type": "LoadImage",
+  "inputs": {
+   "image": "cba8472f8d397bba589eec6a4919602648e4c1bd003793d1ad76fee219a0ea5c.png"
+  }
+ }
+}
