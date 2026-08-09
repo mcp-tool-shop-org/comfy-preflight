@@ -1,0 +1,22 @@
+# NOTE ON ORDER: in .gitattributes the LAST matching pattern wins. The general rule must come
+# first and the specific override last. Getting this backwards silently leaves the general rule
+# in force - measured here, `git check-attr` reported `text=auto` on a path the specific rule
+# was meant to pin.
+
+# Source: normal end-of-line handling.
+* text=auto
+
+# Recorded workflow fixtures are ARTIFACTS, not source. Git must not touch their bytes.
+#
+# Measured: with core.autocrlf=true on Windows, `git add` stripped 172 CR bytes from one
+# 3,165-byte fixture, storing 2,993. The Windows working copy then matched the provenance
+# manifest while the Linux checkout did not, and CI caught it as a byte-hash mismatch. The
+# manifest exists to prove each fixture is byte-identical to the artifact it was copied from,
+# so a transport that rewrites line endings makes the provenance claim false on one platform.
+#
+# `-text` disables all end-of-line conversion in both directions: the bytes committed are the
+# bytes checked out, on every platform.
+#
+# The alternative — comparing parsed JSON instead of bytes — was rejected. It would pass on a
+# fixture that had been reformatted, which is precisely what the manifest is for.
+tests/fixtures/graphs/** -text

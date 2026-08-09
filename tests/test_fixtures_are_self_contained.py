@@ -88,6 +88,40 @@ def test_every_fixture_parses_as_an_api_graph():
             raise AssertionError(f"{name} parsed to an empty graph")
 
 
+def test_gitattributes_pins_the_fixture_bytes():
+    """The fixture tree must be marked `-text`, and the rule must be the LAST match.
+
+    Without it, git rewrites line endings in transit and the provenance manifest becomes true
+    on one platform only — measured: `git add` stripped 172 CR bytes from a 3,165-byte fixture,
+    and CI caught the mismatch on Linux while Windows stayed green.
+
+    Ordering is part of the assertion because the last matching pattern wins. A `-text` rule
+    placed above a `* text=auto` line is silently overridden, which is how this was first
+    written.
+    """
+    path = TESTS.parent / ".gitattributes"
+    if not path.exists():
+        raise AssertionError(
+            ".gitattributes is missing; without it git rewrites fixture line endings and the "
+            "provenance manifest holds on Windows only"
+        )
+    lines = [
+        ln.strip()
+        for ln in path.read_text(encoding="utf-8").splitlines()
+        if ln.strip() and not ln.strip().startswith("#")
+    ]
+    pin = "tests/fixtures/graphs/** -text"
+    if pin not in lines:
+        raise AssertionError(f".gitattributes does not contain {pin!r}; rules present: {lines}")
+
+    generic = [i for i, ln in enumerate(lines) if ln.startswith("* ")]
+    if generic and max(generic) > lines.index(pin):
+        raise AssertionError(
+            "a generic '*' rule appears AFTER the fixture pin and overrides it; "
+            f"rules in order: {lines}"
+        )
+
+
 def test_fixture_bytes_match_the_manifest_hashes():
     """The copies must still be the bytes that were recorded.
 
