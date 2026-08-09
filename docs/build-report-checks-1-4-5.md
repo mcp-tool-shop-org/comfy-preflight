@@ -1,8 +1,8 @@
 # Build report — checks 1, 4 and 5 (the graph-structural group)
 
-**Executor seat, 2026-08-09.** Repo `mcp-tool-shop-org/comfy-preflight` at `8f9f0ad`.
+**Executor seat, 2026-08-09.** Repo `mcp-tool-shop-org/comfy-preflight` at `f80f4e2`.
 Suite **107 tests**, green under normal interpretation, `python -O`, and `PYTHONOPTIMIZE=1`.
-CI **31338962553** (resolved by reading it, not written from expectation).
+CI **31339128146** (resolved by reading it, not written from expectation).
 
 Nothing was submitted. No credit was spent. The API was not contacted at all — not even
 `dry_run`. Nothing under `E:\AI\training` was read at test time or written at any time. No
