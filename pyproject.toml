@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comfy-preflight"
+version = "1.0.0"
+description = "A gate that runs on a ComfyUI workflow graph in the seconds before submission, and halts a submission that would spend credits producing a known-wrong result."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+authors = [{ name = "mcp-tool-shop", email = "64996768+mcp-tool-shop@users.noreply.github.com" }]
+keywords = ["comfyui", "workflow", "preflight", "validation", "gate"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Multimedia :: Graphics",
+]
+
+# ZERO runtime dependencies, and this is load-bearing rather than tidy.
+# The npm door (@mcptoolshop/npm-launcher -> a SHA256-pinned PyInstaller binary) is only
+# open to packages whose dependencies are stdlib + sqlite3 + mcp. Adding a third-party
+# runtime dep closes it. The checks operate on parsed JSON; nothing here needs numpy.
+dependencies = []
+
+[project.optional-dependencies]
+mcp = ["mcp>=1.0"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+comfy-preflight = "comfy_preflight.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/mcp-tool-shop-org/comfy-preflight"
+Issues = "https://github.com/mcp-tool-shop-org/comfy-preflight/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# -O / PYTHONOPTIMIZE strips `assert`. This project's gates `raise`; the test suite is
+# also run under -O in CI to prove the gates survive it. See tests/test_gates_survive_O.py
+addopts = "-q"
