@@ -29,8 +29,6 @@ This repo is **under construction**. The table is the honest state, not a roadma
 
 | # | check | halts on | state |
 |---|---|---|---|
-| # | check | halts on | state |
-|---|---|---|---|
 | 1 | Link topology | a node input referencing its own node; a link to a node id not in the graph; an input the class does not declare | ✅ **built** — 2 clauses of 3; `undeclared_input` needs an injected schema and declines without one |
 | 2 | Inverted register scan | a declared register that does not match the graph's actual construction — **in both directions** | ✅ **built** — both directions |
 | 3 | Recipe-vs-profile agreement, by value | a parameter reaching the graph that disagrees with the subject profile | **not built** |
@@ -41,7 +39,7 @@ This repo is **under construction**. The table is the honest state, not a roadma
 
 Every built check passes on **all 70 recorded graphs** (the no-false-halt leg) and fires on a
 one-edit mutation of a real one, so the passing case and the failing case differ by exactly the
-edit under test. **103 tests, green under normal interpretation, `python -O`, and
+edit under test. **107 tests, green under normal interpretation, `python -O`, and
 `PYTHONOPTIMIZE=1`.**
 
 ### What the built checks do NOT cover

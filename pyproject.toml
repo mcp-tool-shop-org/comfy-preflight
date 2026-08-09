@@ -30,8 +30,11 @@ dependencies = []
 mcp = ["mcp>=1.0"]
 dev = ["pytest>=8.0"]
 
-[project.scripts]
-comfy-preflight = "comfy_preflight.cli:main"
+# No [project.scripts] yet. The scaffold declared
+#   comfy-preflight = "comfy_preflight.cli:main"
+# before any CLI existed, which installs a console command that raises ImportError on first
+# use. The entry returns when the CLI does; tests/test_packaging.py fails if a declared script
+# ever points at a target that cannot be imported.
 
 [project.urls]
 Homepage = "https://github.com/mcp-tool-shop-org/comfy-preflight"
