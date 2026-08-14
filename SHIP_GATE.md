@@ -62,7 +62,7 @@ skipped nine applicable lines.
 ## E. Identity (soft gate — does not block ship)
 
 - [x] `[all]` Logo in README header (2026-08-14 — `mcp-tool-shop-org/brand/logos/comfy-preflight/readme.png`, the armature wordmark form; raw URL verified 200)
-- [ ] `[all]` Translations (polyglot-mcp, 8 languages) — pending the advisor's handback run; translations are the advisor's to execute, not this seat's
+- [x] `[all]` Translations (polyglot-mcp, 8 languages) (2026-08-14 — 7 languages via TranslateGemma 27B on the local GPU, zero API cost; swept for heading parity 13/13, fence parity 8/8, 7-link nav bars with no dead targets, and preserved code/technical strings)
 - [x] `[org]` Landing page (@mcptoolshop/site-theme) (2026-08-14 — live at https://mcp-tool-shop-org.github.io/comfy-preflight/ with a 5-page Starlight handbook and a working Pagefind index; also ships favicon.svg, fixing the org-wide 404 site-theme's hardcoded icon link causes)
 - [x] `[all]` GitHub repo metadata: description, homepage, topics (2026-08-14 — 8 topics, description and homepage set and read back)
 
