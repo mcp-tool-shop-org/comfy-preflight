@@ -1,7 +1,11 @@
 # Build report — the aggregator arc, and check 8
 
-**Executor seat, 2026-08-14.** Repo `mcp-tool-shop-org/comfy-preflight`.
+**Executor seat, 2026-08-14.** Repo `mcp-tool-shop-org/comfy-preflight` at `eac0c81`; the code
+this report describes is `d8b2bf4`, the last commit touching `src/`, `tests/` or `pyproject.toml`.
 Suite **228 tests**, green under normal interpretation, `python -O`, and `PYTHONOPTIMIZE=1`.
+CI **31830549226** — resolved by reading the run, not written from expectation: 228 passed with
+**zero skipped** on Python 3.11 and 3.12 across all three interpreter modes, which is how the MCP
+tests are known to have run rather than skipped for a missing optional extra.
 
 Nothing was submitted. No credit was spent. The API was not contacted at all — not even
 `dry_run`. Nothing under `E:\AI\training` was read or written. `E:\AI\facet` was read for the
