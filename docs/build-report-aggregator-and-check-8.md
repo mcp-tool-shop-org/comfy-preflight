@@ -221,14 +221,31 @@ reader would act on.
 
 ## 6. Findings reported, not fixed
 
-**Against facet — the E35 grounding's finding 8.** `docs/research/E35-speck-research-grounding.md`
-attributes a "~0.10–0.50 recommended img2img denoise" to the InstantX Qwen ControlNet-Union model
-card. The live card does not contain it (§2). The synthesis section carries the same claim
-(*"The InstantX control checkpoint's own documented img2img band is 0.10–0.50; our 0.92 is 2–9×
-above it"*), so the correction is not confined to one line. **facet's tree is read-only to this
-seat; this is a report, not an edit.** Its resolution is the advisor's — including whether the
-0.92-was-out-of-band conclusion in the E35 arc survives it, which is a question about that arc
-and not about this repo.
+**Against facet — the E35 grounding's finding 8, and it is load-bearing in more than one place.**
+`docs/research/E35-speck-research-grounding.md` attributes a "~0.10–0.50 recommended img2img
+denoise" to the InstantX Qwen ControlNet-Union model card. The live card does not contain it
+(§2). Measured at `95f6c64`, the claim appears at least three times in that one file:
+
+| location | text |
+|---|---|
+| synthesis, line 17 | *"The InstantX control checkpoint's own documented img2img band is **0.10–0.50**; our 0.92 is 2–9× above it."* |
+| agent 1, finding 8, line 56 | *"vendor's own recommended img2img denoise range for canny conditioning is ~0.10–0.50"* |
+| design implications, line 60 | *"the vendor's 0.10–0.50 band puts even 0.72 on the high side — don't expect zero invention at 0.72."* |
+
+**And it left the grounding.** The E35 dispatch commit (`1ddb694`) states *"the control checkpoint
+documents a denoise band of 0.10-0.50 against our 0.92, so the sweep hunts a predicted knee"* —
+so the figure is not an inert footnote; it shaped the design of an experiment **a second executor
+is running right now**. That raises the finding from a citation defect to something with a live
+consumer, which is why it is reported here at this weight rather than as a footnote.
+
+**Stated precisely, and no wider than the evidence.** What was verified is that *the cited source
+does not carry the cited number*. This says nothing about whether 0.92 is in fact too high — the
+E33→E35 record is empirical evidence on that question and is untouched by this. What it does mean
+is that the **2–9× framing has no vendor anchor**, and any conclusion resting on the band's
+existence rather than on measurement needs re-grounding.
+
+**facet's tree is read-only to this seat; this is a report, not an edit,** and routing it to the
+E35 seat is the advisor's call rather than something this seat should do directly.
 
 **Check 8's operand coverage is narrower than the incident.** §2's three readings. Not this
 seat's call.
