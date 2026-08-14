@@ -23,6 +23,7 @@ from conftest import (
     CONSUMER,
     CORPUS_CARDS,
     NO_ADAPTER_14,
+    NO_ADAPTER_16,
     all_graph_names,
     load_graph,
     load_raw,
@@ -38,6 +39,11 @@ from comfy_preflight.register import AdapterRegister
 
 WITH_ADAPTER = ADAPTER_15
 WITHOUT_ADAPTER = NO_ADAPTER_14
+# The half of the corpus whose control checkpoint the envelope table does NOT cover, so check 8
+# declines instead of reporting. Needed since Amendment 5: on the covered half, the studio's
+# denoise measurement makes every run at least ADVISORY, which would mask the rungs of the merge
+# order that sit below it.
+INPAINTING_GRAPH = NO_ADAPTER_16
 
 NO_ADAPTER = AdapterRegister(declared=False, known_cards=CORPUS_CARDS)
 DECLARED = AdapterRegister(
@@ -188,8 +194,15 @@ def test_a_frame_defect_from_the_input_image_names_the_operand_it_actually_has()
 # ---------------------------------------------------------------------------------------------
 
 
-def test_a_clean_run_with_every_operand_supplied_passes():
-    """Every check evaluates at least one clause and finds nothing."""
+def test_a_clean_run_with_every_operand_supplied_finds_nothing_but_the_measurement():
+    """Every check evaluates at least one clause, and nothing is wrong with this graph.
+
+    ⚑ What Amendment 5 moved. This run used to aggregate to PASS. The recorded recipe runs
+    denoise 0.92 on the Qwen Union checkpoint, and the studio's E35 measurement of exactly that
+    parameter now ships in the envelope table — so check 8 reports what was measured at the
+    value being run, and an ADVISORY is the honest verdict for a run carrying a fact the caller
+    should see. Nothing here is a defect: `defects` is empty, and ADVISORY exits 0.
+    """
     raw = load_raw(WITHOUT_ADAPTER)
     result = preflight(
         Graph.from_api_dict(raw),
@@ -198,21 +211,24 @@ def test_a_clean_run_with_every_operand_supplied_passes():
         saved_graph=Graph.from_api_dict(raw),
         consumer_input=CONSUMER,
     )
-    assert result.verdict is Verdict.PASS
+    assert result.verdict is Verdict.ADVISORY
+    assert result.defects == (), "nothing about this graph is a defect"
+    assert {d.code for d in result.advisories} == {"PARAMETER_HAS_A_STUDIO_MEASUREMENT"}
     for outcome in result.outcomes:
-        assert outcome.verdict is Verdict.PASS, f"check {outcome.number}: {outcome.verdict}"
-        assert outcome.clauses_evaluated, f"check {outcome.number} passed without evaluating a clause"
+        expected = Verdict.ADVISORY if outcome.number == 8 else Verdict.PASS
+        assert outcome.verdict is expected, f"check {outcome.number}: {outcome.verdict}"
+        assert outcome.clauses_evaluated, f"check {outcome.number} answered without a clause"
 
 
-def test_an_aggregate_pass_does_not_mean_every_clause_was_asked():
-    """The honest reading of PASS, pinned so nobody infers the stronger claim.
+def test_a_nonhalting_verdict_does_not_mean_every_clause_was_asked():
+    """The honest reading of a green run, pinned so nobody infers the stronger claim.
 
     A check returns PASS when it evaluated at least one clause and found nothing — the
     convention the shipped checks already follow. Two clauses decline on a clean run no matter
     what the caller supplies: check 1's `undeclared_input` needs a node schema from a live
-    ComfyUI, and check 8's denoise is a parameter the model card documents no band for. So PASS
-    means *nothing was found by what could be asked*, and the unasked questions stay listed in
-    `declined` rather than being folded into the verdict.
+    ComfyUI, and check 8's denoise absence is a parameter the model card documents no band for.
+    So a non-halting verdict means *nothing was found by what could be asked*, and the unasked
+    questions stay listed in `declined` rather than being folded into the verdict.
 
     The alternative — any declined clause forcing the aggregate to NOT_APPLICABLE — was
     considered and rejected: it would make PASS unreachable in every environment without a live
@@ -226,21 +242,23 @@ def test_an_aggregate_pass_does_not_mean_every_clause_was_asked():
         saved_graph=Graph.from_api_dict(raw),
         consumer_input=CONSUMER,
     )
-    assert result.verdict is Verdict.PASS
+    assert result.verdict is not Verdict.HALT
     clauses = {clause for _, clause, _ in result.declined}
     assert "undeclared_input" in clauses
     assert "envelope_bands.denoise" in clauses
     for _, _, why in result.declined:
-        assert len(why) > 20, "a declined clause on a PASSING run must still say why"
+        assert len(why) > 20, "a declined clause on a non-halting run must still say why"
 
 
 def test_a_declined_clause_outranks_the_passing_ones():
     """The surprising rung, at the aggregate level.
 
     With no input dimensions and no saved sidecar, checks 5 and 4 decline. Reporting PASS would
-    let two unasked questions hide behind three answered ones.
+    let two unasked questions hide behind three answered ones. Measured on the inpainting half
+    of the corpus, whose checkpoint the envelope table does not cover — so check 8 declines too
+    and no advisory outranks the rung under test.
     """
-    result = preflight(load_graph(WITHOUT_ADAPTER), NO_ADAPTER, consumer_input=CONSUMER)
+    result = preflight(load_graph(INPAINTING_GRAPH), NO_ADAPTER, consumer_input=CONSUMER)
     assert result.verdict is Verdict.NOT_APPLICABLE
     assert {check for check, _, _ in result.declined} >= {
         "check_4_saved_is_graph_submitted",
@@ -276,11 +294,11 @@ def test_an_advisory_never_raises_even_when_it_is_the_top_verdict():
     assert result.verdict is Verdict.ADVISORY  # returned, not raised
 
 
-def test_a_divisor_16_short_frame_moves_the_aggregate_from_pass_to_advisory():
+def test_a_divisor_16_short_frame_surfaces_as_an_advisory_finding():
     """Amendment 3, at the aggregate. 1064 is /8-legal and /16-short.
 
-    Before the ruling this run aggregated to PASS with the preference buried in a note field.
-    Now the advisory surfaces as a finding with a verdict a caller can act on.
+    Before that ruling this preference was buried in a note field. Now it surfaces as a finding
+    with a verdict a caller can act on, and never as a halting defect.
     """
     raw = load_raw(WITHOUT_ADAPTER)
     result = preflight(
@@ -296,8 +314,14 @@ def test_a_divisor_16_short_frame_moves_the_aggregate_from_pass_to_advisory():
     assert result.defects == (), "a preference must never arrive as a halting defect"
 
 
-def test_the_same_run_at_a_divisor_16_clean_frame_is_a_plain_pass():
-    """The control for the test above: only the /16-shortness moved the verdict."""
+def test_the_same_run_at_a_divisor_16_clean_frame_drops_that_finding():
+    """The control for the test above: only the /16-shortness moved check 5.
+
+    ⚑ The control used to read `verdict is PASS`. Since Amendment 5 the aggregate stays ADVISORY
+    on this recipe regardless of the frame, because check 8 reports the studio's denoise
+    measurement on every run — so the control now names the finding that left rather than the
+    verdict that changed, which is the property it was always testing.
+    """
     raw = load_raw(WITHOUT_ADAPTER)
     result = preflight(
         Graph.from_api_dict(raw),
@@ -306,8 +330,8 @@ def test_the_same_run_at_a_divisor_16_clean_frame_is_a_plain_pass():
         saved_graph=Graph.from_api_dict(raw),
         consumer_input=CONSUMER,
     )
-    assert result.verdict is Verdict.PASS
-    assert result.advisories == ()
+    assert {d.code for d in result.advisories} == {"PARAMETER_HAS_A_STUDIO_MEASUREMENT"}
+    assert result.outcome_for(5).verdict is Verdict.PASS
 
 
 # ---------------------------------------------------------------------------------------------

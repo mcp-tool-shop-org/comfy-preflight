@@ -131,6 +131,19 @@ plainly that it cannot judge it and why.
 Reporting the value it cannot judge is the honest half of the finding. Inventing a band to judge
 it against would be the dishonest half.
 
+**Where the vendor documents nothing, a measurement can answer** — as a second entry with its own
+authority, never folded into the first. The table is keyed by `(checkpoint, parameter)`, so one
+parameter carries both voices: the card documents no denoise band, *and* a studio experiment swept
+denoise on this checkpoint and found that **the register dies before the specks do** — the speck
+census reaches zero at `0.72` only by reverting 56% of the figure toward its init. A graph on this
+checkpoint gets the nearest measured rungs, the recipe they hold at, and the experiment citation,
+at whatever denoise it runs.
+
+A measured entry carries a retrievable experiment record the way a cited entry carries a URL, and
+a measurement is not a recommendation: the rungs say what happened at the values that were
+measured, under one recipe, and nothing about the values between them. So it advises — and
+advisories exit `0`.
+
 ## The adoption contract
 
 **Call it in-process on the submit path. There is no skip flag.**

@@ -12,7 +12,13 @@ import io
 import json
 
 import pytest
-from conftest import CORPUS_CARD, CORPUS_CARD_ALIAS, NO_ADAPTER_14, load_raw
+from conftest import (
+    CORPUS_CARD,
+    CORPUS_CARD_ALIAS,
+    NO_ADAPTER_14,
+    NO_ADAPTER_16,
+    load_raw,
+)
 
 from comfy_preflight import cli
 from comfy_preflight.cli import EXIT_HALT, EXIT_OK, EXIT_USAGE
@@ -59,6 +65,36 @@ def _out_of_band(tmp_path) -> str:
     return _write(tmp_path, "advisory.json", raw)
 
 
+def _headline(out: str) -> str:
+    """The aggregate verdict line, not a per-check one.
+
+    ⚑ Earned. These tests asserted `"verdict: PASS" in out`, and the rendering prints
+    `verdict:` once per check as well as once for the run — so when Amendment 5 moved the
+    aggregate for this recipe from PASS to ADVISORY, two exit-code tests kept passing on a
+    substring from check 1's line. An assertion that cannot fail is not a test.
+    """
+    for line in out.splitlines():
+        if line.startswith("verdict: "):
+            return line
+    raise AssertionError(f"no aggregate verdict line in the rendering:\n{out}")
+
+
+def _no_denoise(tmp_path) -> str:
+    """The recorded graph with its sampler declaring no denoise — the only shape on this
+    checkpoint that still reaches an aggregate PASS.
+
+    Since Amendment 5 the envelope table carries the studio's E35 measurement of denoise for
+    this checkpoint, so any graph that declares one reports it and lands on ADVISORY. Dropping
+    the input leaves the measurement with no operand, which it declines rather than guesses at —
+    and that is what leaves this run with nothing at all to say.
+    """
+    raw = load_raw(NO_ADAPTER_14)
+    for node in raw.values():
+        if node["class_type"] in ("KSampler", "KSamplerAdvanced"):
+            del node["inputs"]["denoise"]
+    return _write(tmp_path, "quiet.json", raw)
+
+
 # ---------------------------------------------------------------------------------------------
 # The exit-code contract, each code against the reason it was chosen.
 # ---------------------------------------------------------------------------------------------
@@ -87,19 +123,58 @@ def test_an_advisory_exits_zero_so_a_shell_chain_does_not_turn_it_into_a_halt(
 
 
 def test_not_applicable_exits_zero_because_every_recorded_graph_reaches_it(
-    graph_path, register_path
+    tmp_path, register_path
 ):
     """All 70 recorded graphs are img2img, so a run without --input-dims declines check 5.
 
     Exiting nonzero there would fire on correct work on the entire corpus, which is how a gate
     gets disabled by the third person who hits it.
+
+    Measured on the inpainting half, whose control checkpoint the envelope table does not cover.
+    On the covered half check 8 now reports the studio's denoise measurement, and ADVISORY
+    outranks NOT_APPLICABLE — a different exit-code leg, tested directly above.
     """
-    code, out, _ = _run(["check", graph_path, "--register", register_path])
+    path = _write(tmp_path, "inpainting.json", load_raw(NO_ADAPTER_16))
+    code, out, _ = _run(["check", path, "--register", register_path])
     assert code == EXIT_OK
-    assert "verdict: NOT_APPLICABLE" in out
+    assert _headline(out) == "verdict: NOT_APPLICABLE"
 
 
-def test_a_pass_exits_zero(tmp_path, graph_path, register_path):
+def test_a_pass_exits_zero(tmp_path, register_path):
+    """The quiet run: every operand supplied and nothing at all to report.
+
+    Since Amendment 5 that takes a graph whose sampler declares no denoise — see `_no_denoise`.
+    On the recorded recipe the studio's measurement always has something to say, and this leg
+    is about the exit code for a verdict of PASS, not about which graphs still reach it.
+    """
+    path = _no_denoise(tmp_path)
+    code, out, _ = _run(
+        [
+            "check",
+            path,
+            "--register",
+            register_path,
+            "--input-dims",
+            "1072x1024",
+            "--saved",
+            path,
+            "--consumer",
+            "6.model",
+        ]
+    )
+    assert code == EXIT_OK
+    assert _headline(out) == "verdict: PASS"
+
+
+def test_the_recorded_recipe_carries_the_studio_measurement_and_still_exits_zero(
+    graph_path, register_path
+):
+    """Amendment 5 at the development door, with the exit-code consequence stated.
+
+    The recorded graph runs denoise 0.92 on the checkpoint E35 swept. A caller who supplies
+    every operand now gets ADVISORY rather than PASS, carrying what the studio measured at that
+    value — and still exits 0, so a `&&` chain does not stop on it.
+    """
     code, out, _ = _run(
         [
             "check",
@@ -115,7 +190,10 @@ def test_a_pass_exits_zero(tmp_path, graph_path, register_path):
         ]
     )
     assert code == EXIT_OK
-    assert "verdict: PASS" in out
+    assert _headline(out) == "verdict: ADVISORY"
+    assert "PARAMETER_HAS_A_STUDIO_MEASUREMENT" in out
+    assert "E35" in out
+    assert "Director-ruled HOLD" in out
 
 
 def test_a_missing_file_is_a_usage_error_not_a_halt(tmp_path):
@@ -186,11 +264,11 @@ def test_the_json_output_is_the_aggregators_own_rendering(graph_path, register_p
     code, out, _ = _run(["check", graph_path, "--register", register_path, "--json"])
     assert code == EXIT_OK
     payload = json.loads(out)
-    assert payload["verdict"] == "not_applicable"
+    assert payload["verdict"] == "advisory"
     assert [entry["check"] for entry in payload["checks"]] == [1, 2, 4, 5, 8]
 
 
-def test_declined_clauses_print_even_on_a_passing_run(tmp_path, graph_path, register_path):
+def test_declined_clauses_print_even_on_a_green_run(tmp_path, graph_path, register_path):
     """A clause nobody asked is not a clause that passed.
 
     Hiding declines behind a green verdict is how coverage quietly shrinks, so they print.
@@ -210,7 +288,7 @@ def test_declined_clauses_print_even_on_a_passing_run(tmp_path, graph_path, regi
         ]
     )
     assert code == EXIT_OK
-    assert "verdict: PASS" in out
+    assert _headline(out) in ("verdict: PASS", "verdict: ADVISORY")
     assert "declined undeclared_input" in out
     assert "declined envelope_bands.denoise" in out
 

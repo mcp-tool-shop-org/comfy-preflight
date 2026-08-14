@@ -127,7 +127,11 @@ The rung that surprises people is **NOT_APPLICABLE outranking PASS**, and it is 
 where one check declined has not checked everything, and reporting PASS would let the declined
 clause vanish behind the passing ones. Declining is louder than passing.
 
-**PASS does not mean every clause was asked.** Two decline on any clean run — check 1's
+**A green verdict does not mean every clause was asked.** Two decline on any clean run — check 1's
 `undeclared_input` needs a live ComfyUI's schema, and check 8's `denoise` is a parameter its card
 documents no band for. The unasked questions stay listed rather than folded into a green verdict,
-and the CLI prints them **on a passing run**.
+and the CLI prints them **even when nothing halted**.
+
+On a checkpoint the [envelope table](../envelope-table/) carries a studio measurement for, the
+green verdict is `ADVISORY` rather than `PASS`: there is a measured fact to report at whatever
+value the graph runs. It still exits `0`.

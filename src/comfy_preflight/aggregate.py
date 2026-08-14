@@ -35,11 +35,11 @@ NOT_APPLICABLE — which is the honest headline for a run where two checks could
 from __future__ import annotations
 
 import dataclasses
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from typing import Any
 
 from comfy_preflight.checks.c1_link_topology import NodeSchema
-from comfy_preflight.envelope import ENVELOPE, EnvelopeEntry
+from comfy_preflight.envelope import ENVELOPE, EnvelopeTable
 from comfy_preflight.errors import Defect, PreflightHalt, Verdict, merge_verdicts
 from comfy_preflight.graph import Graph
 from comfy_preflight.register import AdapterRegister
@@ -151,7 +151,7 @@ def preflight(
     schema: NodeSchema | None = None,
     consumer_input: tuple[str, str] | None = None,
     family: str = "qwen",
-    envelope_table: Mapping[str, EnvelopeEntry] = ENVELOPE,
+    envelope_table: EnvelopeTable = ENVELOPE,
     checks: Sequence[RegisteredCheck] = REGISTRY,
 ) -> PreflightResult:
     """Run every registered check and merge their verdicts.

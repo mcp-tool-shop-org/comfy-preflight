@@ -26,19 +26,38 @@ reads the graph's value, reports it, and says plainly that it cannot judge it an
 is the whole point of the day-one entry: the recorded 0.92 is surfaced at the moment it is
 cheap, and no band is invented to surface it. See `envelope.py` for what the live card was
 measured to contain, which is not what the research grounding attributed to it.
+
+## And what it reports where the studio measured what the vendor never documented
+
+Amendment 5 ruled in the first `STUDIO_MEASURED` entry: E35's denoise sweep on this same
+checkpoint. Where a **measured ladder** covers a parameter, the check reports the graph's value
+together with the nearest measured rungs, the recipe those rungs hold at, and the experiment
+citation — as an **ADVISORY, on every value**, including the value the Director held.
+
+That last part is the ruling, not an oversight. A band is a range a publisher endorses, so
+silence inside it is correct; a ladder endorses nothing, so there is no "inside" to be silent
+about. The consequence is deliberate and visible: a graph on this checkpoint no longer reaches
+PASS, it reaches ADVISORY carrying what the studio measured. ADVISORY exits 0, so nothing that
+was proceeding stops proceeding — the caller is simply told, before the spend, what happens to
+the register at the value they are about to run.
+
+**The vendor's declared absence stays beside it.** Both authorities report on denoise: the card
+documents nothing, and the studio measured this. Neither sentence replaces the other.
 """
 
 from __future__ import annotations
 
 import dataclasses
-from collections.abc import Mapping
 
 from comfy_preflight.envelope import (
     CHECKPOINT_INPUT_NAMES,
     ENVELOPE,
     Band,
     EnvelopeEntry,
+    EnvelopeTable,
+    MeasuredLadder,
     basename,
+    entries_for,
 )
 from comfy_preflight.errors import Defect, Verdict
 from comfy_preflight.graph import Graph
@@ -88,13 +107,14 @@ def _numeric(value: object) -> float | None:
 def check_declared_envelope(
     graph: Graph,
     *,
-    table: Mapping[str, EnvelopeEntry] = ENVELOPE,
+    table: EnvelopeTable = ENVELOPE,
 ) -> CheckResult:
     """Run check 8. Always returns a CheckResult; **never raises PreflightHalt**.
 
-    There is no skip parameter. `table` is the envelope table, injected so a caller can extend
-    it — every entry it contains is validated by `EnvelopeEntry`'s own constructor, which
-    refuses an uncited row.
+    There is no skip parameter. `table` is the envelope table keyed by (checkpoint, parameter),
+    injected so a caller can extend it — every entry it contains is validated by
+    `EnvelopeEntry`'s own constructor, which refuses an uncited row. Build one with
+    `envelope.index(*entries)`.
     """
     evaluated: list[str] = []
     declined: list[tuple[str, str]] = []
@@ -127,11 +147,13 @@ def check_declared_envelope(
     covered: list[tuple[LoadedCheckpoint, EnvelopeEntry]] = []
     uncovered: list[LoadedCheckpoint] = []
     for loaded in found:
-        entry = table.get(basename(loaded.value).lower())
-        if entry is None:
+        # One checkpoint can carry more than one entry — the vendor's citation and the studio's
+        # measurement are separate rows by construction, and both are reported.
+        entries = entries_for(table, loaded.value)
+        if not entries:
             uncovered.append(loaded)
         else:
-            covered.append((loaded, entry))
+            covered.extend((loaded, entry) for entry in entries)
 
     if uncovered:
         names = sorted({basename(c.value) for c in uncovered})
@@ -204,6 +226,50 @@ def check_declared_envelope(
                     )
                 )
 
+        # -- the parameters the STUDIO measured, where the vendor documents nothing -
+        for ladder in entry.ladders:
+            operands = _nodes_of_classes(graph, ladder.node_classes, ladder.parameter)
+            if not operands:
+                declined.append(
+                    (
+                        f"envelope_measured.{ladder.parameter}",
+                        f"{entry.checkpoint} carries a studio measurement of "
+                        f"{ladder.parameter!r} on {sorted(ladder.node_classes)}, but the graph "
+                        "has no such node carrying that input. The rungs were reported against "
+                        f"nothing rather than against a guess. Source: {citation}",
+                    )
+                )
+                continue
+            clause = f"envelope_measured.{ladder.parameter}"
+            if clause not in evaluated:
+                evaluated.append(clause)
+            for node_id, value in operands:
+                checked.append((node_id, ladder.parameter, value))
+                findings.append(
+                    Defect(
+                        code="PARAMETER_HAS_A_STUDIO_MEASUREMENT",
+                        message=(
+                            # Says what the STUDIO measured and nothing about what the vendor
+                            # did or did not publish. The vendor's own entry speaks for itself,
+                            # in its own clause, in this same report.
+                            f"{ladder.parameter} is {value:g}, and the studio measured this "
+                            f"parameter on {entry.checkpoint}. "
+                            f"{_rungs_rendered(ladder, value)} "
+                            f"Measured at: {ladder.context}. Source: {citation}"
+                        ),
+                        hint=(
+                            "ADVISORY, not a halt - and not a recommendation either. These are "
+                            "readings, not a range somebody endorsed: they say what happened at "
+                            "the values that were measured, under the recipe named above, and "
+                            "nothing about the values between them. This exists so the fact is "
+                            "in front of you before the credits are spent. If the value is "
+                            "intended, proceed"
+                        ),
+                        node_id=node_id,
+                        input_name=ladder.parameter,
+                    )
+                )
+
         # -- the parameters the card is known NOT to document ----------------------
         for absence in entry.documented_absent:
             operands = _nodes_of_classes(graph, absence.node_classes, absence.parameter)
@@ -244,6 +310,26 @@ def check_declared_envelope(
         checkpoints_not_in_table=tuple(sorted({basename(c.value) for c in uncovered})),
         parameters_checked=tuple(checked),
         notes=tuple(notes),
+    )
+
+
+def _rungs_rendered(ladder: MeasuredLadder, value: float) -> str:
+    """The nearest measured rungs, and — when the value sits off the end — the fact that it does.
+
+    Nothing is interpolated and nothing is extrapolated. A value outside the sweep gets the
+    nearest rung and a sentence saying it is outside, because a reading taken at 0.72 is not
+    evidence about 0.40 and this check does not pretend otherwise.
+    """
+    rungs = "; ".join(rung.rendered(ladder.parameter) for rung in ladder.nearest(value))
+    nearest = f"Nearest measured: {rungs}."
+    if ladder.spans(value):
+        return nearest
+    low, high = ladder.span
+    side = "below" if value < low else "above"
+    return (
+        f"{nearest} That value is {side} every rung this sweep measured "
+        f"({ladder.parameter} {low:g} to {high:g}), so it is reported as the nearest reading "
+        "and nothing is extrapolated to reach it"
     )
 
 

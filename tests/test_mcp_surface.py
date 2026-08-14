@@ -142,15 +142,17 @@ def test_calling_the_tool_through_the_sdk_returns_the_structured_result():
                 "graph": raw,
                 "register": REGISTER,
                 "input_dims": [1072, 1024],
-                # Every operand supplied, so this reaches PASS rather than the NOT_APPLICABLE
-                # every img2img graph lands on when check 4 and check 5 cannot be asked.
+                # Every operand supplied, so nothing declines its way to the NOT_APPLICABLE
+                # every img2img graph lands on when check 4 and check 5 cannot be asked. The
+                # verdict is ADVISORY rather than PASS because check 8 carries the studio's E35
+                # denoise measurement for this checkpoint (Amendment 5) - a fact, not a defect.
                 "saved_graph": raw,
                 "consumer_input": "6.model",
             },
         )
     )
     assert result.is_error is False
-    assert result.structured_content["verdict"] == "pass"
+    assert result.structured_content["verdict"] == "advisory"
     assert [c["check"] for c in result.structured_content["checks"]] == [1, 2, 4, 5, 8]
 
 

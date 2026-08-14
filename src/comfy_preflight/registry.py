@@ -31,7 +31,7 @@ everything. The gate still fires; it fires with the whole picture.
 from __future__ import annotations
 
 import dataclasses
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from typing import Any
 
 from comfy_preflight.checks.c1_link_topology import NodeSchema, check_link_topology
@@ -39,7 +39,7 @@ from comfy_preflight.checks.c2_register import check_register_scan
 from comfy_preflight.checks.c4_saved_is_submitted import check_saved_is_submitted
 from comfy_preflight.checks.c5_frame import check_generator_legal_frame
 from comfy_preflight.checks.c8_envelope import check_declared_envelope
-from comfy_preflight.envelope import ENVELOPE, EnvelopeEntry
+from comfy_preflight.envelope import ENVELOPE, EnvelopeTable
 from comfy_preflight.errors import Defect, PreflightHalt, Verdict
 from comfy_preflight.graph import Graph
 from comfy_preflight.register import AdapterRegister
@@ -62,7 +62,7 @@ class CheckInputs:
     schema: NodeSchema | None = None
     consumer_input: tuple[str, str] | None = None
     family: str = "qwen"
-    envelope_table: Mapping[str, EnvelopeEntry] = dataclasses.field(default_factory=lambda: ENVELOPE)
+    envelope_table: EnvelopeTable = dataclasses.field(default_factory=lambda: ENVELOPE)
 
 
 @dataclasses.dataclass(frozen=True)
