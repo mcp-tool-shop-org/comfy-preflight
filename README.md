@@ -23,6 +23,22 @@ pipeline.** A completed cloud job is billed. The compensator is *cancel it if it
 queued, otherwise none* — which is not much of a compensator. So this is a compensator you
 run **before** instead of after.
 
+## Quick start
+
+```bash
+pip install comfy-preflight
+comfy-preflight check graph.json --input-dims 1072x1024 --register subject.json
+```
+
+```python
+from comfy_preflight import preflight
+from comfy_preflight.graph import Graph
+
+# Inside the function that submits. Not in a shell step before it.
+preflight(Graph.from_api_dict(payload), register, input_dims=(w, h))   # raises PreflightHalt
+submit(payload)                                                        # only if nothing raised
+```
+
 ## Build state — read this before trusting a row
 
 This repo is **under construction**. The table is the honest state, not a roadmap.
@@ -31,15 +47,19 @@ This repo is **under construction**. The table is the honest state, not a roadma
 |---|---|---|---|
 | 1 | Link topology | a node input referencing its own node; a link to a node id not in the graph; an input the class does not declare | ✅ **built** — 2 clauses of 3; `undeclared_input` needs an injected schema and declines without one |
 | 2 | Inverted register scan | a declared register that does not match the graph's actual construction — **in both directions** | ✅ **built** — both directions |
-| 3 | Recipe-vs-profile agreement, by value | a parameter reaching the graph that disagrees with the subject profile | **not built** |
+| 3 | Recipe-vs-profile agreement, by value | a parameter reaching the graph that disagrees with the subject profile | **not built** — no subject-profile fixture in this repo |
 | 4 | Graph-saved-is-graph-submitted | saved sidecar and submitted payload differing **as parsed graphs** | ✅ **built** |
 | 5 | Generator-legal frame | a dimension the effective frame's VAE cannot decode at | ✅ **built** — Qwen only; every other family declared-absent |
 | 6 | Estimate before submit | a missing or unread credit estimate | **not built** — transport-side |
-| 7 | Anchor reproduction | a recorded graph that no longer rebuilds from its recorded inputs | **not built** |
+| 7 | Anchor reproduction | a recorded graph that no longer rebuilds from its recorded inputs | **not built** — needs the builder |
+| 8 | Declared-envelope advisory | **nothing — it never halts.** A parameter outside a checkpoint's documented band is an ADVISORY | ✅ **built** — one cited checkpoint |
+
+Surfaces: the **`preflight()` aggregator** composes 1/2/4/5/8 through a check registry, and the
+**CLI verb** and **MCP tool** are transports over that same in-process function.
 
 Every built check passes on **all 70 recorded graphs** (the no-false-halt leg) and fires on a
 one-edit mutation of a real one, so the passing case and the failing case differ by exactly the
-edit under test. **107 tests, green under normal interpretation, `python -O`, and
+edit under test. **228 tests, green under normal interpretation, `python -O`, and
 `PYTHONOPTIMIZE=1`.**
 
 ### What the built checks do NOT cover
@@ -61,6 +81,143 @@ edit under test. **107 tests, green under normal interpretation, `python -O`, an
 - **Check 4 answers the value question, not the byte question.** Both live in this repo and they
   are different: the fixture manifest asserts byte-identity with the recorded artifact, and check
   4 asserts that no *value* moved between save and submit.
+- **Check 8 knows one checkpoint, and does not know the parameter it was commissioned for.**
+  The day-one entry carries the conditioning-scale band its model card actually documents. The
+  denoise band the arc expected is **not on that card** — see below; it ships as a *declared
+  absence* that reports the value it cannot judge.
+
+## `preflight()` — one call, every check, one verdict
+
+```python
+from comfy_preflight import preflight
+
+result = preflight(graph, register, input_dims=(1072, 1024), saved_graph=saved)
+result.verdict          # Verdict.PASS | ADVISORY | NOT_APPLICABLE   (HALT raises)
+result.advisories       # findings to see, not grounds to stop
+result.declined         # every clause no check could ask, and why
+result.to_dict()        # what the CLI's --json and the MCP tool return
+```
+
+Verdicts merge **HALT > ADVISORY > NOT_APPLICABLE > PASS**. The rung that surprises people is
+NOT_APPLICABLE outranking PASS, and it is deliberate: a run where one check declined has not
+checked everything, and reporting PASS would let the declined clause vanish behind the passing
+ones.
+
+**There is exactly one entry point.** A second, non-raising `preflight_report()` for the CLI and
+the MCP to call would be a skip flag under another name — a caller on the submit path could
+reach for it and get a value back where the gate should have stopped them. So the **halt carries
+the whole report** (`PreflightHalt.report`), the renderers catch it and print, and the submit
+path lets it propagate.
+
+**A halt carries every defect from every check, in one raise.** A check that halts does not stop
+the others from running; otherwise a caller fixes one defect, reruns, finds the next — a gate run
+five times before an act it exists to gate once.
+
+**PASS does not mean every clause was asked.** Two decline on any clean run: check 1's
+`undeclared_input` needs a node schema from a live ComfyUI, and check 8's denoise is a parameter
+its card documents no band for. The unasked questions stay listed in `declined` rather than being
+folded into a green verdict.
+
+Every optional parameter is an **askability** parameter: supplying it makes a clause askable,
+omitting it makes a check decline and *name what it could not see*. None of them turns a check
+off, and no function here takes a `skip`, `force`, `warn_only` or `enabled` argument — a test
+reads each signature rather than trusting this sentence.
+
+The composition surface is a **registry**, not a hardcoded list, so the result can enumerate its
+own coverage. A check silently dropping out of a hardcoded aggregator would look exactly like a
+check that passed. Check 8 is the proof it extends: it was specified after the aggregator was,
+and landing it took one registry line plus one adapter.
+
+## The CLI — the development door
+
+```bash
+comfy-preflight check graph.json \
+  --register subject.json --input-dims 1072x1024 --saved saved.json --consumer 6.model --json
+```
+
+| exit | meaning |
+|---|---|
+| `0` | nothing halted — PASS, ADVISORY or NOT_APPLICABLE, **each named in the output** |
+| `1` | HALT |
+| `2` | usage or input error — bad arguments, unreadable file, unparseable graph |
+
+**ADVISORY exits 0 on purpose.** A nonzero status stops a `&&` chain, which would make the
+advisory a halt in every shell that runs one. **NOT_APPLICABLE exits 0 for the inverse reason:**
+all 70 recorded graphs are img2img, so a run without `--input-dims` declines check 5, and a gate
+that exits nonzero across a whole corpus of correct work is a gate that gets disabled. Both stay
+named in the output and in `--json`, so a caller that wants to gate on an advisory reads the
+verdict rather than the exit status.
+
+An unparseable graph is exit 2, not exit 1. Exit 1 tells a caller the gate examined a graph;
+when nothing parsed, nothing was examined.
+
+## The MCP surface — a transport, not a second implementation
+
+```bash
+pip install 'comfy-preflight[mcp]'
+python -m comfy_preflight.mcp_server        # stdio
+```
+
+One tool, `preflight`, which calls the same in-process function and returns its structured
+result **verbatim** — a test asserts byte-identity with what the library returns. A HALT is a
+*successful* call returning `{"verdict": "halt", ...}`, because reporting it as a protocol error
+would throw away the structure the caller needs and leave a client retrying a call that keeps
+succeeding at finding the same defect.
+
+The graph arrives inline rather than as a path: a server that opened arbitrary paths on request
+would add a filesystem-read surface to a package whose threat model says its inputs reach neither
+the filesystem nor the network. `mcp` stays an optional extra and is imported inside the one
+function that needs it, so the core package keeps zero runtime dependencies.
+
+## Check 8 — the declared-envelope advisory, and what its card does not say
+
+For each checkpoint the graph loads, compare the graph's parameters against a **cited** envelope
+table. Out of band is an **ADVISORY, never a HALT**; no entry is NOT_APPLICABLE naming the
+checkpoint it could not see.
+
+Advisory is a ruling, not a softness. The studio ran an out-of-band denoise **deliberately** and
+the Director approved the register it produced. A documented band is documentation, not a gate,
+and a check that halts correct work gets disabled by the third person who hits it.
+
+> ### ⚠ The band this check was commissioned for is not on the card it cites
+>
+> The arc expected a day-one entry carrying InstantX Qwen-Image-ControlNet-Union's **img2img
+> denoise band of ~0.10–0.50**, sourced from a research grounding that attributes it to that
+> model card.
+>
+> **Verified against the live card on 2026-08-14 — two independent fetches, the rendered model
+> page and `raw/main/README.md` — and that band is not on it.** The card documents
+> `controlnet_conditioning_scale` in `[0.8, 1.0]` for each of its four control types, and shows
+> `true_cfg_scale=4.0` / `num_inference_steps=30` as example values in an inference snippet. It
+> publishes no img2img denoise or strength range at all.
+>
+> So the denoise band **does not ship**. The table's discipline decides it: an entry populated
+> from memory is worse than a missing one, and a band this check cannot retrieve is one it must
+> not judge against. What ships instead is the band the card *does* document, plus a **declared
+> absence** — so a run on the recorded graphs reports:
+>
+> ```
+> declined envelope_bands.denoise:
+>   this graph runs denoise at node 13 = 0.92, and this check CANNOT say whether that is in or
+>   out of band for Qwen-Image-InstantX-ControlNet-Union.safetensors: the card documents NO
+>   img2img denoise or strength range. [...] Source consulted:
+>   https://huggingface.co/InstantX/Qwen-Image-ControlNet-Union (retrieved 2026-08-14)
+> ```
+>
+> Reporting the value it cannot judge is the honest half of the finding. Inventing a band to
+> judge it against would be the dishonest half. **Whether that leaves check 8 doing the job it
+> was commissioned for is the advisor's ruling, not this repo's** — see
+> [the build report](docs/build-report-aggregator-and-check-8.md).
+
+Every entry carries its parameter, band, source URL, retrieval date and a quote of the card's own
+words, and the `EnvelopeEntry` constructor **refuses to build an uncited row** — the discipline
+made mechanical rather than left to review. Card parameter names map to graph input names by a
+*declared* mapping, never by name-matching: the card documents a diffusers argument
+(`controlnet_conditioning_scale`) and the graph carries a node input (`strength`), and a
+parameter matched by name alone would let a band judge a knob the card never governed.
+
+Bands follow the checkpoint's wires, so a graph carrying two control checkpoints does not have
+one entry's band applied to the other's apply node.
 
 ## Check 1 — link topology, and the case that started all this
 
@@ -198,15 +355,19 @@ past a failing exit code. Nobody decided to proceed; the construction was incapa
 stopping.
 
 ```python
-from comfy_preflight.checks import check_register_scan
+from comfy_preflight import preflight
 
 # Inside the function that submits. Not in a shell step before it.
-check_register_scan(graph, register, consumer_input=consumer)   # raises PreflightHalt
-submit(graph)                                                   # only reached if nothing raised
+preflight(graph, register, input_dims=(width, height))   # raises PreflightHalt
+submit(graph)                                            # only reached if nothing raised
 ```
 
-No check takes a `skip`, `force`, `warn_only` or `enabled` parameter, and a test reads each
-signature to keep it that way rather than trusting the docstring.
+**The CLI and the MCP server are transports, not gates.** Reading a HALT from either and then
+submitting from somewhere else is the same shell chain with a nicer interface. Both exist for
+developing a graph by hand; the production gate is the call above.
+
+No function here takes a `skip`, `force`, `warn_only` or `enabled` parameter, and a test reads
+each signature to keep it that way rather than trusting the docstring.
 
 **Every gate `raise`s. None is a bare `assert`.** `python -O` and `PYTHONOPTIMIZE=1` delete
 `assert` silently and execution continues past it — in the repo that produced this rule, 87
