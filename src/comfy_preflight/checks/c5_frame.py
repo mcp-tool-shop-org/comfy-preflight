@@ -38,8 +38,15 @@ NOT_APPLICABLE and names itself.
 The standing constraint reads *"÷8 is the floor, prefer ÷16"* — a floor and a preference, not two
 floors. A width indivisible by 8 decodes short and corrupts the pairing: that HALTS. A width
 divisible by 8 but not 16 is legal and dispreferred (deeper stacks patch at 16): that is an
-advisory note on a PASS. Promoting the preference to a halt would fire on 1064 and on every
-other legal ÷8 frame — a gate halting correct work, which is how a gate gets disabled.
+**ADVISORY**. Promoting the preference to a halt would fire on 1064 and on every other legal ÷8
+frame — a gate halting correct work, which is how a gate gets disabled.
+
+**The ÷16 case returns `Verdict.ADVISORY`, not `PASS` with a note (Amendment 3).** Amendment 1a's
+original wording — *"it PASSES with a note"* — predates the verdict vocabulary; once `ADVISORY`
+exists in the merge order, the ÷16 note *is* an advisory and carrying it as one is a re-labeling
+rather than a re-specification. Nothing about when this check halts changed: ÷8 still halts, ÷16
+still never does. What changed is that the advisory now travels as a located finding a caller can
+see beside check 8's, instead of as prose in a field that merges into a green verdict.
 """
 
 from __future__ import annotations
@@ -95,6 +102,10 @@ class CheckResult:
     operand: str  # "graph_literals" | "input_dimensions" | "none"
     dimensions_checked: tuple[tuple[str, int], ...]
     family: str
+    # Non-halting findings — the ÷16 advisory. Named `findings` to match check 8, because the
+    # aggregator reads that one field across every check; a check whose advisories lived under a
+    # different name would have them silently dropped from the merged report.
+    findings: tuple[Defect, ...] = ()
     notes: tuple[str, ...] = ()
 
 
@@ -124,6 +135,7 @@ def check_generator_legal_frame(
     There is no skip parameter.
     """
     defects: list[Defect] = []
+    findings: list[Defect] = []
     evaluated: list[str] = []
     declined: list[tuple[str, str]] = []
     notes: list[str] = []
@@ -151,13 +163,19 @@ def check_generator_legal_frame(
 
     declared = declared_dimensions(graph)
 
+    # Each subject is (label, value, node_id, input_name). The last two are None only on the
+    # input-dimensions path, where the operand is the uploaded image and there is genuinely no
+    # node to name — the one documented exception to "every finding names its node".
     if declared:
         operand = "graph_literals"
-        subjects = [(f"node {nid}.{name}", value) for nid, name, value in declared]
+        subjects = [(f"node {nid}.{name}", value, nid, name) for nid, name, value in declared]
     elif input_dimensions is not None:
         operand = "input_dimensions"
         width, height = input_dimensions
-        subjects = [("input width", int(width)), ("input height", int(height))]
+        subjects = [
+            ("input width", int(width), None, None),
+            ("input height", int(height), None, None),
+        ]
         notes.append(
             "the graph declares no dimension; the frame was taken from the input image's "
             "dimensions as supplied by the caller"
@@ -183,13 +201,15 @@ def check_generator_legal_frame(
         )
 
     evaluated.append("frame_divisibility")
-    for label, value in subjects:
+    for label, value, node_id, input_name in subjects:
         if value <= 0:
             defects.append(
                 Defect(
                     code="FRAME_NOT_POSITIVE",
                     message=f"{label} is {value}",
                     hint="a frame dimension must be a positive number of pixels",
+                    node_id=node_id,
+                    input_name=input_name,
                 )
             )
             continue
@@ -212,29 +232,47 @@ def check_generator_legal_frame(
                         "round for you, because a graph a gate repaired is a graph nobody "
                         "reviewed"
                     ),
+                    node_id=node_id,
+                    input_name=input_name,
                 )
             )
         elif (
             constraint.preferred_divisor is not None
             and value % constraint.preferred_divisor != 0
         ):
-            notes.append(
-                f"{label} is {value}: divisible by {constraint.divisor} (legal) but not by "
-                f"{constraint.preferred_divisor} (preferred, against stacks that patch at "
-                f"{constraint.preferred_divisor}). Advisory - the floor is "
-                f"{constraint.divisor} and this is not a halt"
+            findings.append(
+                Defect(
+                    code="FRAME_BELOW_PREFERRED_DIVISOR",
+                    message=(
+                        f"{label} is {value}: divisible by {constraint.divisor} (legal) but not "
+                        f"by {constraint.preferred_divisor} (preferred, against stacks that patch "
+                        f"at {constraint.preferred_divisor})"
+                    ),
+                    hint=(
+                        f"ADVISORY, not a halt - {constraint.divisor} is the floor and this frame "
+                        f"clears it. {constraint.preferred_divisor} is a preference, and the "
+                        "record classifies this exact width as legal-but-not-preferred. If the "
+                        f"frame was derived from the subject, proceed; "
+                        f"{_nearest_legal(value, constraint)}"
+                    ),
+                    node_id=node_id,
+                    input_name=input_name,
+                )
             )
 
     if defects:
         raise PreflightHalt(CHECK_NAME, defects)
 
     return CheckResult(
-        verdict=Verdict.PASS,
+        # ADVISORY, not PASS-with-a-note (Amendment 3). Nothing about when this check HALTS
+        # changed - only how the non-halting finding travels.
+        verdict=Verdict.ADVISORY if findings else Verdict.PASS,
         clauses_evaluated=tuple(evaluated),
         clauses_declined=tuple(declined),
         operand=operand,
-        dimensions_checked=tuple((label, value) for label, value in subjects),
+        dimensions_checked=tuple((label, value) for label, value, _, _ in subjects),
         family=constraint.family,
+        findings=tuple(findings),
         notes=tuple(notes),
     )
 

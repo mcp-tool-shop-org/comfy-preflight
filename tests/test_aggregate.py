@@ -142,6 +142,29 @@ def test_every_finding_names_its_node_and_its_evidence():
         assert defect.message and defect.hint
 
 
+def test_a_frame_defect_from_a_declared_literal_DOES_name_its_node():
+    """The exception below is narrower than it looks, and this is the boundary.
+
+    When the graph declares the dimension, check 5 has a node to name and names it. Only the
+    input-image path lacks one. A graph fixture is built with an illegal literal width so the
+    two paths can be told apart.
+    """
+
+    def declare_an_illegal_frame(raw: dict) -> None:
+        raw["9001"] = {
+            "class_type": "EmptyLatentImage",
+            "inputs": {"width": 1066, "height": 1024, "batch_size": 1},
+        }
+
+    with pytest.raises(PreflightHalt) as exc:
+        preflight(mutate(WITHOUT_ADAPTER, declare_an_illegal_frame), NO_ADAPTER)
+    frame = [d for d in exc.value.defects if d.code == "FRAME_NOT_GENERATOR_LEGAL"]
+    assert frame, "the declared illegal literal did not fire"
+    for defect in frame:
+        assert defect.node_id == "9001"
+        assert defect.input_name == "width"
+
+
 def test_a_frame_defect_from_the_input_image_names_the_operand_it_actually_has():
     """The one documented exception to 'every finding names its node', with its reason.
 
@@ -251,6 +274,40 @@ def test_an_advisory_never_raises_even_when_it_is_the_top_verdict():
     """The direction Amendment 2 rules on: ADVISORY, never HALT, at the aggregate too."""
     result = preflight(mutate(WITHOUT_ADAPTER, _set_strength_out_of_band), NO_ADAPTER)
     assert result.verdict is Verdict.ADVISORY  # returned, not raised
+
+
+def test_a_divisor_16_short_frame_moves_the_aggregate_from_pass_to_advisory():
+    """Amendment 3, at the aggregate. 1064 is /8-legal and /16-short.
+
+    Before the ruling this run aggregated to PASS with the preference buried in a note field.
+    Now the advisory surfaces as a finding with a verdict a caller can act on.
+    """
+    raw = load_raw(WITHOUT_ADAPTER)
+    result = preflight(
+        Graph.from_api_dict(raw),
+        NO_ADAPTER,
+        (1064, 1024),
+        saved_graph=Graph.from_api_dict(raw),
+        consumer_input=CONSUMER,
+    )
+    assert result.verdict is Verdict.ADVISORY
+    codes = {d.code for d in result.advisories}
+    assert "FRAME_BELOW_PREFERRED_DIVISOR" in codes
+    assert result.defects == (), "a preference must never arrive as a halting defect"
+
+
+def test_the_same_run_at_a_divisor_16_clean_frame_is_a_plain_pass():
+    """The control for the test above: only the /16-shortness moved the verdict."""
+    raw = load_raw(WITHOUT_ADAPTER)
+    result = preflight(
+        Graph.from_api_dict(raw),
+        NO_ADAPTER,
+        (1072, 1024),
+        saved_graph=Graph.from_api_dict(raw),
+        consumer_input=CONSUMER,
+    )
+    assert result.verdict is Verdict.PASS
+    assert result.advisories == ()
 
 
 # ---------------------------------------------------------------------------------------------

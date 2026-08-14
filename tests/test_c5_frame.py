@@ -18,7 +18,7 @@ from comfy_preflight.checks.c5_frame import (
     check_generator_legal_frame,
     declared_dimensions,
 )
-from comfy_preflight.errors import PreflightHalt, Verdict
+from comfy_preflight.errors import Defect, PreflightHalt, Verdict
 
 # Frames from the record. 1066 is the defect; 1072 the re-ruled replacement; 752 is W3's;
 # 1024 the pair's. 1064 is what 1066 decoded to - legal by /8, short of the preferred /16.
@@ -106,19 +106,54 @@ def test_frames_that_the_record_used_without_incident_pass(width):
     assert result.verdict is Verdict.PASS
 
 
-def test_a_legal_but_dispreferred_frame_passes_with_an_advisory():
+def test_a_legal_but_dispreferred_frame_advises_and_does_not_halt():
     """1064 is divisible by 8 (legal) and not by 16 (dispreferred).
 
     The standing constraint reads "/8 is the floor, prefer /16" - a floor and a preference, not
     two floors. Promoting the preference to a halt would fire on every legal /8 frame, and a gate
     that halts correct work gets disabled by the third person who hits it.
+
+    Amendment 3 re-labels this ADVISORY. Amendment 1a's "PASSES with a note" predates the verdict
+    vocabulary; once ADVISORY exists in the merge order, this IS one.
     """
     result = check_generator_legal_frame(
         load_graph(ADAPTER_15), input_dimensions=(RECORDED_DECODED, 1024)
     )
-    assert result.verdict is Verdict.PASS
-    assert any("not by 16" in n for n in result.notes)
-    assert any("not a halt" in n for n in result.notes)
+    assert result.verdict is Verdict.ADVISORY
+    assert len(result.findings) == 1
+    finding = result.findings[0]
+    assert finding.code == "FRAME_BELOW_PREFERRED_DIVISOR"
+    assert "not by 16" in finding.message
+    assert "ADVISORY, not a halt" in finding.hint
+
+
+def test_the_advisory_is_a_relabeling_and_not_a_new_halt():
+    """The load-bearing half of Amendment 3: WHEN this check halts did not change.
+
+    /8 still halts, /16 still never does. If a later edit made the preference halt, this fires.
+    """
+    # /16-short: advisory, returns rather than raises.
+    check_generator_legal_frame(load_graph(ADAPTER_15), input_dimensions=(RECORDED_DECODED, 1024))
+    # /8-short: still halts.
+    with pytest.raises(PreflightHalt):
+        check_generator_legal_frame(load_graph(ADAPTER_15), input_dimensions=(RECORDED_ILLEGAL, 1024))
+    # /16-clean: still a plain PASS with no finding at all.
+    clean = check_generator_legal_frame(load_graph(ADAPTER_15), input_dimensions=(1072, 1024))
+    assert clean.verdict is Verdict.PASS
+    assert clean.findings == ()
+
+
+def test_the_advisory_travels_as_findings_so_the_aggregator_sees_it():
+    """Named `findings` to match check 8, because the aggregator reads that one field.
+
+    An advisory under a differently-named field would be silently dropped from the merged report -
+    present in this check's result and absent from the run's.
+    """
+    result = check_generator_legal_frame(
+        load_graph(ADAPTER_15), input_dimensions=(RECORDED_DECODED, 1024)
+    )
+    assert hasattr(result, "findings")
+    assert all(isinstance(f, Defect) for f in result.findings)
 
 
 def test_height_is_checked_not_only_width():
