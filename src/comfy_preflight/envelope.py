@@ -47,6 +47,7 @@ entry.
 from __future__ import annotations
 
 import dataclasses
+import enum
 import re
 
 # Input names that carry the name of a loaded model checkpoint. `vae_name` and `clip_name` are
@@ -57,6 +58,74 @@ CHECKPOINT_INPUT_NAMES = frozenset(
 )
 
 _ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+class EntryKind(enum.Enum):
+    """Where an entry's authority comes from. Both kinds must justify themselves; neither may
+    be populated from memory.
+
+    The spec's discipline is *"each entry needs a measurement or a citation"* — two routes to the
+    same standard, and this enum is the fork made explicit so a reader can tell at a glance which
+    one an entry took.
+
+    VENDOR — the checkpoint's publisher documents the band. Authority is the card, and the entry
+    carries `source_url` + `retrieved` so the citation can be re-fetched and can go stale visibly.
+
+    STUDIO_MEASURED — the publisher documents nothing, and the studio measured it. Authority is
+    the studio's own record, and the entry carries a `record` locator the way a vendor entry
+    carries a URL: a specific, retrievable experiment record, not "we found that...".
+
+    **The measured kind exists because of a fact this table already reports.** The Qwen
+    ControlNet-Union card documents no img2img denoise band at all, so no vendor citation for that
+    parameter can ever exist — the only route to an entry is measuring it. Amendment 3 ruled the
+    capability in and the data out: **the kind ships, and no measured entry ships with it** until
+    the advisor rules a specific measurement in.
+    """
+
+    VENDOR = "vendor"
+    STUDIO_MEASURED = "studio_measured"
+
+
+@dataclasses.dataclass(frozen=True)
+class MeasuredRecord:
+    """The locator for a studio measurement — a measured entry's answer to `source_url`.
+
+    A measurement with no retrievable record is the same defect as a band with no card: a number
+    whose authority cannot be checked by the person it halts. So this is required, structured, and
+    validated, rather than a free-text "measured internally".
+
+    `experiment` is the record's own identifier (e.g. an E-number), `locator` the path or URL where
+    that record lives, and `measured` the ISO date the measurement was taken — the exact analogue
+    of a vendor entry's retrieval date, and it goes stale the same way.
+    """
+
+    experiment: str
+    locator: str
+    measured: str
+    finding: str
+
+    def __post_init__(self) -> None:
+        if not self.experiment.strip():
+            raise ValueError(
+                "MeasuredRecord requires an `experiment` identifier; a measurement nobody can "
+                "name is one nobody can re-open"
+            )
+        if not self.locator.strip():
+            raise ValueError(
+                f"MeasuredRecord({self.experiment!r}) requires a `locator` - the path or URL of "
+                "the record. This is the measured kind's citation, and an entry without one is "
+                "populated from memory no matter how true it is"
+            )
+        if not _ISO_DATE.match(self.measured):
+            raise ValueError(
+                f"MeasuredRecord({self.experiment!r}) has measured {self.measured!r}, which is "
+                "not an ISO date. A measurement without a date cannot go stale visibly"
+            )
+        if not self.finding.strip():
+            raise ValueError(
+                f"MeasuredRecord({self.experiment!r}) requires a one-line `finding` - what the "
+                "measurement actually showed, in the words of whoever took it"
+            )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -133,16 +202,25 @@ class DocumentedAbsence:
 
 @dataclasses.dataclass(frozen=True)
 class EnvelopeEntry:
-    """One checkpoint's declared envelope, with its citation.
+    """One checkpoint's declared envelope, with the authority for every number in it.
 
-    The constructor refuses to build an uncited entry. That refusal is the data discipline made
-    mechanical rather than documented: a table whose citations are checked only by review is a
-    table that acquires a recalled number the first time someone is in a hurry.
+    The constructor refuses to build an unjustified entry, in either kind. That refusal is the
+    data discipline made mechanical rather than documented: a table whose citations are checked
+    only by review is a table that acquires a recalled number the first time someone is in a
+    hurry.
+
+    `kind` selects which justification is required, and the two are mutually exclusive by
+    construction. A VENDOR entry carries a URL and a retrieval date and must NOT carry a record;
+    a STUDIO_MEASURED entry carries a record and must NOT carry a URL. Allowing both would let an
+    entry look doubly-sourced while being neither — the reader could not tell which number came
+    from where.
     """
 
     checkpoint: str
-    source_url: str
-    retrieved: str
+    source_url: str = ""
+    retrieved: str = ""
+    kind: EntryKind = EntryKind.VENDOR
+    record: MeasuredRecord | None = None
     bands: tuple[Band, ...] = ()
     documented_absent: tuple[DocumentedAbsence, ...] = ()
     notes: tuple[str, ...] = ()
@@ -150,22 +228,59 @@ class EnvelopeEntry:
     def __post_init__(self) -> None:
         if not self.checkpoint.strip():
             raise ValueError("EnvelopeEntry requires a checkpoint name")
-        if not self.source_url.startswith(("http://", "https://")):
-            raise ValueError(
-                f"EnvelopeEntry({self.checkpoint!r}) has source_url {self.source_url!r}, which "
-                "is not a URL. Every entry cites a retrievable source; an uncited entry is a "
-                "number recalled from memory and is worse than a missing row"
-            )
-        if not _ISO_DATE.match(self.retrieved):
-            raise ValueError(
-                f"EnvelopeEntry({self.checkpoint!r}) has retrieved {self.retrieved!r}, which is "
-                "not an ISO date. A citation without a retrieval date cannot go stale visibly"
-            )
+
+        if self.kind is EntryKind.VENDOR:
+            if not self.source_url.startswith(("http://", "https://")):
+                raise ValueError(
+                    f"EnvelopeEntry({self.checkpoint!r}) has source_url {self.source_url!r}, "
+                    "which is not a URL. A vendor entry cites a retrievable source; an uncited "
+                    "entry is a number recalled from memory and is worse than a missing row"
+                )
+            if not _ISO_DATE.match(self.retrieved):
+                raise ValueError(
+                    f"EnvelopeEntry({self.checkpoint!r}) has retrieved {self.retrieved!r}, which "
+                    "is not an ISO date. A citation without a retrieval date cannot go stale "
+                    "visibly"
+                )
+            if self.record is not None:
+                raise ValueError(
+                    f"EnvelopeEntry({self.checkpoint!r}) is kind VENDOR but carries a measured "
+                    "record. The two authorities are exclusive: an entry claiming both looks "
+                    "doubly-sourced while a reader cannot tell which number came from where. "
+                    "Split it into two entries, or pick the authority the numbers actually have"
+                )
+        else:
+            if self.record is None:
+                raise ValueError(
+                    f"EnvelopeEntry({self.checkpoint!r}) is kind STUDIO_MEASURED but carries no "
+                    "record. The record locator IS the measured kind's citation - without one "
+                    "the entry is populated from memory no matter how true it is"
+                )
+            if self.source_url or self.retrieved:
+                raise ValueError(
+                    f"EnvelopeEntry({self.checkpoint!r}) is kind STUDIO_MEASURED but carries a "
+                    "vendor source_url/retrieved. If the vendor documents the band, the entry is "
+                    "kind VENDOR; if it does not, the URL belongs in `notes` as context rather "
+                    "than beside numbers it did not supply"
+                )
+
         if not self.bands and not self.documented_absent:
             raise ValueError(
                 f"EnvelopeEntry({self.checkpoint!r}) declares neither a band nor a documented "
                 "absence, so it says nothing about the checkpoint it names"
             )
+
+    @property
+    def citation(self) -> str:
+        """The authority, rendered for a finding. Both kinds answer; neither is allowed to be
+        vague about which one it is."""
+        if self.kind is EntryKind.VENDOR:
+            return f"{self.source_url} (retrieved {self.retrieved})"
+        record = self.record
+        return (
+            f"studio measurement {record.experiment} at {record.locator} "
+            f"(measured {record.measured}): {record.finding}"
+        )
 
 
 def basename(value: str) -> str:
@@ -231,6 +346,24 @@ QWEN_CONTROLNET_UNION = EnvelopeEntry(
 ENVELOPE: dict[str, EnvelopeEntry] = {
     basename(QWEN_CONTROLNET_UNION.checkpoint).lower(): QWEN_CONTROLNET_UNION,
 }
+
+# ---------------------------------------------------------------------------------------------
+# THE STUDIO-MEASURED KIND SHIPS EMPTY, AND THAT IS THE RULING, NOT AN OVERSIGHT.
+#
+# Amendment 3 adopted reading B "as a capability, gated as data": the table MAY carry measured
+# entries beside vendor-cited ones, and **no measured entry ships until the advisor rules one in.**
+# So the schema, the validation and the tests land here; the data does not.
+#
+# The first candidate is E35's denoise sweep once ruled — which would convert facet's own record
+# into the documentation the vendor never wrote, for the exact parameter this table currently
+# reports as a declared absence. Adding it is a data change against a schema already proven, not
+# a code change: construct an EnvelopeEntry(kind=EntryKind.STUDIO_MEASURED, record=MeasuredRecord(
+# experiment=..., locator=..., measured=..., finding=...), bands=(...)) and register it below.
+#
+# A test pins that this stays empty, so ruling an entry in is a deliberate act that must also
+# delete the test asserting nothing was ruled in yet.
+# ---------------------------------------------------------------------------------------------
+STUDIO_MEASURED: dict[str, EnvelopeEntry] = {}
 
 # Checkpoints the recorded corpus loads that this table does NOT cover, named so the boundary is
 # visible rather than inferred from a quiet NOT_APPLICABLE. Each needs its own live card read.

@@ -19,9 +19,12 @@ from comfy_preflight.checks import check_declared_envelope
 from comfy_preflight.envelope import (
     DECLARED_ABSENT_CHECKPOINTS,
     ENVELOPE,
+    STUDIO_MEASURED,
     Band,
     DocumentedAbsence,
+    EntryKind,
     EnvelopeEntry,
+    MeasuredRecord,
     basename,
 )
 from comfy_preflight.errors import PreflightHalt, Verdict
@@ -221,6 +224,155 @@ def test_a_documented_absence_must_say_how_it_was_checked():
 # ---------------------------------------------------------------------------------------------
 # The day-one entry, against the corpus it was measured on.
 # ---------------------------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------------------------
+# The STUDIO_MEASURED entry kind (Amendment 3, reading B): the capability ships, the data does not.
+# ---------------------------------------------------------------------------------------------
+
+
+def _record(**over) -> MeasuredRecord:
+    base = dict(
+        experiment="E99",
+        locator="docs/experiments/E99-synthetic.md",
+        measured="2026-08-14",
+        finding="a synthetic measurement, used only to exercise the schema",
+    )
+    base.update(over)
+    return MeasuredRecord(**base)
+
+
+def test_the_measured_kind_ships_empty_until_the_advisor_rules_an_entry_in():
+    """Amendment 3 adopted reading B as a CAPABILITY, gated as DATA.
+
+    This test is the gate. Ruling a measured entry in must also delete this assertion, which
+    makes the ruling a deliberate act rather than a quiet append.
+    """
+    assert STUDIO_MEASURED == {}
+    assert all(e.kind is EntryKind.VENDOR for e in ENVELOPE.values())
+
+
+def test_a_measured_entry_requires_a_record_locator():
+    """The measured kind's citation. Without it the entry is populated from memory however true."""
+    band = Band(
+        parameter="denoise",
+        low=0.1,
+        high=0.5,
+        node_classes=frozenset({"KSampler"}),
+        quote="q",
+        mapping="m",
+    )
+    with pytest.raises(ValueError, match="carries no record"):
+        EnvelopeEntry(
+            checkpoint="zz_synthetic.safetensors",
+            kind=EntryKind.STUDIO_MEASURED,
+            bands=(band,),
+        )
+
+
+def test_a_measured_record_validates_every_field_it_promises():
+    with pytest.raises(ValueError, match="requires an `experiment`"):
+        _record(experiment="  ")
+    with pytest.raises(ValueError, match="requires a `locator`"):
+        _record(locator="")
+    with pytest.raises(ValueError, match="not an ISO date"):
+        _record(measured="last week")
+    with pytest.raises(ValueError, match="requires a one-line `finding`"):
+        _record(finding="")
+
+
+def test_the_two_authorities_are_mutually_exclusive():
+    """An entry claiming both looks doubly-sourced while a reader cannot tell which number came
+    from where."""
+    band = Band(
+        parameter="denoise",
+        low=0.1,
+        high=0.5,
+        node_classes=frozenset({"KSampler"}),
+        quote="q",
+        mapping="m",
+    )
+    with pytest.raises(ValueError, match="carries a measured record"):
+        EnvelopeEntry(
+            checkpoint="zz_synthetic.safetensors",
+            source_url="https://example.invalid/card",
+            retrieved="2026-08-14",
+            kind=EntryKind.VENDOR,
+            record=_record(),
+            bands=(band,),
+        )
+    with pytest.raises(ValueError, match="carries a vendor source_url"):
+        EnvelopeEntry(
+            checkpoint="zz_synthetic.safetensors",
+            source_url="https://example.invalid/card",
+            retrieved="2026-08-14",
+            kind=EntryKind.STUDIO_MEASURED,
+            record=_record(),
+            bands=(band,),
+        )
+
+
+def test_a_measured_entry_renders_its_record_as_the_citation():
+    """Both kinds answer `citation`, and neither is vague about which one it is."""
+    band = Band(
+        parameter="denoise",
+        low=0.1,
+        high=0.5,
+        node_classes=frozenset({"KSampler"}),
+        quote="q",
+        mapping="m",
+    )
+    entry = EnvelopeEntry(
+        checkpoint="zz_synthetic.safetensors",
+        kind=EntryKind.STUDIO_MEASURED,
+        record=_record(),
+        bands=(band,),
+    )
+    citation = entry.citation
+    assert "studio measurement E99" in citation
+    assert "docs/experiments/E99-synthetic.md" in citation
+    assert "measured 2026-08-14" in citation
+    # ...and it does not claim a vendor said so.
+    assert "retrieved" not in citation
+
+    vendor = ENVELOPE[UNION.lower()]
+    assert vendor.citation.startswith("https://")
+    assert "retrieved 2026-08-14" in vendor.citation
+
+
+def test_a_measured_entry_works_end_to_end_through_the_check():
+    """The schema is proven against the real check, not only against its constructor.
+
+    Uses a synthetic checkpoint name so nothing in the shipped table moves.
+    """
+    raw = copy.deepcopy(load_raw(UNION_GRAPH))
+    loader_id = next(
+        nid for nid, n in raw.items() if n["class_type"] == "ControlNetLoader"
+    )
+    raw[loader_id]["inputs"]["control_net_name"] = "zz_synthetic.safetensors"
+    entry = EnvelopeEntry(
+        checkpoint="zz_synthetic.safetensors",
+        kind=EntryKind.STUDIO_MEASURED,
+        record=_record(finding="strength above 0.5 hardened interior speckle"),
+        bands=(
+            Band(
+                parameter="strength",
+                low=0.1,
+                high=0.5,
+                node_classes=frozenset({"ControlNetApplyAdvanced"}),
+                quote="measured across the sweep's four arms",
+                mapping="the graph's ControlNetApplyAdvanced.strength is the swept parameter",
+            ),
+        ),
+    )
+    result = check_declared_envelope(
+        Graph.from_api_dict(raw), table={"zz_synthetic.safetensors": entry}
+    )
+    # The recorded 0.9 is outside the synthetic 0.1-0.5 band, so this advises.
+    assert result.verdict is Verdict.ADVISORY
+    finding = result.findings[0]
+    assert "studio measurement E99" in finding.message
+    assert "hardened interior speckle" in finding.message
 
 
 def test_the_day_one_entry_is_the_qwen_union_checkpoint_and_only_it():

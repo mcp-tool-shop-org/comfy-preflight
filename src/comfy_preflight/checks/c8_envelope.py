@@ -161,7 +161,9 @@ def check_declared_envelope(
     evaluated.append("envelope_bands")
 
     for loaded, entry in covered:
-        citation = f"{entry.source_url} (retrieved {entry.retrieved})"
+        # The entry renders its own authority, because a vendor citation and a studio measurement
+        # are different things and a finding must not blur them into "the source says".
+        citation = entry.citation
 
         # -- the bands the card DOES document --------------------------------------
         for band in entry.bands:
