@@ -221,8 +221,14 @@ jobs:
               --generate-notes --verify-tag assets/* dist/*
           fi
 
+      # `skip-existing` makes a PARTIAL release retryable, and it was earned: v1.0.0 published
+      # to PyPI and then failed at the npm step, which left no way to retry npm — a re-run
+      # would die on PyPI's "version already exists" before ever reaching npm, and the tag
+      # cannot be moved once a registry has seen it.
       - name: Publish to PyPI (OIDC trusted publishing)
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
 
       # Node 22 ships npm 10.9, which signs provenance but cannot negotiate the
       # OIDC auth path (the registry PUT returns a misleading 404). In-place
