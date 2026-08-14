@@ -274,6 +274,63 @@ def test_nothing_was_submitted_is_stated_on_a_halt(tmp_path, register_path):
 # ---------------------------------------------------------------------------------------------
 
 
+def test_an_internal_error_is_reported_structurally_not_as_a_traceback(monkeypatch, graph_path):
+    """A stack trace is not an error message.
+
+    The failure is injected at the aggregator so the path under test is the real one - the CLI's
+    outermost guard - rather than a mocked-out renderer.
+    """
+    def boom(*a, **k):
+        raise RuntimeError("a synthetic bug in the gate itself")
+
+    monkeypatch.setattr(cli, "preflight", boom)
+    code, out, err = _run(["check", graph_path])
+    assert code == EXIT_USAGE
+    assert "INTERNAL_ERROR" in err
+    assert "RuntimeError" in err
+    assert "Traceback" not in err and "Traceback" not in out
+    # It must say whose fault it is and what the caller may conclude.
+    assert "bug in comfy-preflight, not a defect in your graph" in err
+    assert "NOTHING was examined" in err
+    assert "--debug" in err
+
+
+def test_debug_re_raises_so_a_developer_keeps_the_frame(monkeypatch, graph_path):
+    """The other half: suppressing a traceback at a user must not destroy it for a developer."""
+    def boom(*a, **k):
+        raise RuntimeError("a synthetic bug in the gate itself")
+
+    monkeypatch.setattr(cli, "preflight", boom)
+    with pytest.raises(RuntimeError, match="synthetic bug"):
+        cli.main(["check", graph_path, "--debug"], out=io.StringIO(), err=io.StringIO())
+
+
+def test_an_internal_error_exits_two_because_nothing_was_examined(monkeypatch, graph_path):
+    """Not exit 1. Exit 1 says a defect was found in the graph; a bug in the gate found nothing."""
+    monkeypatch.setattr(cli, "preflight", lambda *a, **k: (_ for _ in ()).throw(ValueError("x")))
+    code, _, _ = _run(["check", graph_path])
+    assert code == EXIT_USAGE
+    assert code != EXIT_HALT
+
+
+def test_the_mcp_verb_exists_and_says_it_is_not_the_production_gate():
+    """`comfy-preflight mcp` is how the npx binary reaches the stdio server with no Python."""
+    parser = cli.build_parser()
+    mcp = parser._subparsers._group_actions[0].choices["mcp"]  # noqa: SLF001
+    assert "NOT THE PRODUCTION GATE" in mcp.description
+
+
+def test_the_mcp_verb_dispatches_to_the_server_module(monkeypatch):
+    """A transport launcher, not a second implementation: it calls mcp_server.main and nothing else."""
+    from comfy_preflight import mcp_server
+
+    called = []
+    monkeypatch.setattr(mcp_server, "main", lambda: called.append(True) or 0)
+    code = cli.main(["mcp"], out=io.StringIO(), err=io.StringIO())
+    assert code == EXIT_OK
+    assert called == [True]
+
+
 def test_the_command_exposes_no_skip_flag():
     """Read the parser's actual options rather than trusting the help text."""
     parser = cli.build_parser()

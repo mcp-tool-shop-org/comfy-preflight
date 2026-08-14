@@ -1,0 +1,43 @@
+{
+  "name": "@mcptoolshop/comfy-preflight",
+  "version": "1.0.0",
+  "description": "A gate that runs on a ComfyUI workflow graph in the seconds before submission and halts a submission that would spend credits producing a known-wrong result. Zero-prerequisite npx launcher — no Python needed.",
+  "type": "commonjs",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "comfy-preflight": "bin/comfy-preflight.js"
+  },
+  "files": [
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@mcptoolshop/npm-launcher": "^1.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mcp-tool-shop-org/comfy-preflight.git"
+  },
+  "homepage": "https://mcp-tool-shop-org.github.io/comfy-preflight/",
+  "bugs": {
+    "url": "https://github.com/mcp-tool-shop-org/comfy-preflight/issues"
+  },
+  "author": "mcp-tool-shop",
+  "keywords": [
+    "comfyui",
+    "workflow",
+    "preflight",
+    "validation",
+    "gate",
+    "mcp",
+    "model-context-protocol"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

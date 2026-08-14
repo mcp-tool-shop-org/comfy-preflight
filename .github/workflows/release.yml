@@ -1,0 +1,236 @@
+name: Release
+
+# ONE workflow, BOTH registries, plus the binaries npm-launcher fetches at run
+# time. Both trusted publishers — PyPI's pending publisher for `comfy-preflight`
+# and npm's for `@mcptoolshop/comfy-preflight` — are bound to this exact
+# filename, so it must never be renamed; npm masks that failure as a 404 rather
+# than an auth error.
+#
+# Publishing here rather than chaining a downstream workflow is deliberate: a
+# Release created with GITHUB_TOKEN does NOT fire `release: published`
+# (GitHub's recursion guard), which silently skips the registries.
+#
+# No tokens. Both publishes are OIDC trusted publishing, which is why there is
+# no NPM_TOKEN or PYPI_TOKEN secret on this repo and must never be one.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write      # GitHub Release + asset upload
+  id-token: write      # OIDC for BOTH npm provenance and PyPI trusted publishing
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # The binaries npm-launcher downloads. Naming is LOCKED by its platform table:
+  # <tool>-<version>-<os>-<arch>[.exe], where win32 maps to the string "win",
+  # not "windows". A mismatch here is a 404 at the user's npx.
+  # macOS is not built — the org drops it at ~10x Linux cost; darwin users get
+  # npm-launcher's own "no checksum for asset" error listing what does exist.
+  # ---------------------------------------------------------------------------
+  binaries:
+    name: Build ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: linux-x64
+            ext: ''
+          - os: windows-latest
+            label: win-x64
+            ext: '.exe'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install the package with the mcp extra, and PyInstaller
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[mcp]"
+          python -m pip install pyinstaller==6.22.0
+
+      # The binary is the CLI, which carries the `mcp` verb — so one artifact
+      # serves both doors and `npx @mcptoolshop/comfy-preflight mcp` reaches the
+      # stdio server on a machine with no Python at all.
+      #
+      # `--exclude-module mcp.cli` is load-bearing: mcp.cli imports typer and
+      # calls sys.exit(1) at import time when typer is absent, which aborts
+      # PyInstaller's analysis. Nothing here imports mcp.cli.
+      - name: Build the single-file binary
+        shell: bash
+        run: |
+          pyinstaller --onefile --name comfy-preflight \
+            --collect-submodules mcp \
+            --exclude-module mcp.cli \
+            --exclude-module typer \
+            --exclude-module IPython \
+            --console --noconfirm \
+            src/comfy_preflight/cli.py
+
+      - name: Name it by the launcher's convention
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p out
+          mv "dist/comfy-preflight${{ matrix.ext }}" \
+             "out/comfy-preflight-${VERSION}-${{ matrix.label }}${{ matrix.ext }}"
+          ls -l out/
+
+      # A VERB, not --help. The binary is smoke-tested on a real graph from a
+      # scratch directory, and the recorded 1066 frame must exit 1 — a binary
+      # that only ever returns 0 would not prove the gate survived freezing.
+      - name: Smoke-test the binary before it can ever reach a user
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          BIN="$PWD/out/comfy-preflight-${VERSION}-${{ matrix.label }}${{ matrix.ext }}"
+          chmod +x "$BIN" || true
+          mkdir -p /tmp/smoke
+          cp tests/fixtures/graphs/facet_next__E12_twins__graphs__workflow_twin_0.json /tmp/smoke/graph.json
+          cd /tmp/smoke
+          "$BIN" --version
+          "$BIN" check graph.json --json > out.json
+          python -c "import json;d=json.load(open('out.json'));assert d['checks_run']==[1,2,4,5,8],d['checks_run']"
+          rc=0
+          "$BIN" check graph.json --input-dims 1066x1024 > /dev/null 2>&1 || rc=$?
+          if [ "$rc" -ne 1 ]; then
+            echo "::error::the recorded 1066 halt exited $rc, expected 1" >&2
+            exit 1
+          fi
+          echo "the binary runs a verb and the 1066 halt still exits 1"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.label }}
+          path: out/*
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  release:
+    name: Publish PyPI + npm, cut the Release
+    needs: binaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      # THE VERSION GATE. Four sites declare this version and all four must
+      # match the tag, because bin/comfy-preflight.js pins an EXACT tag and
+      # asset name. Drift ships a wrapper that 404s at a user's npx rather than
+      # failing here.
+      - name: Verify tag matches every declared version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PYPROJECT=$(python -c "import tomllib,pathlib;print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
+          PKGJSON=$(node -p "require('./package.json').version")
+          # Extracted with python, NOT a node one-liner: the obvious node version
+          # uses a regex replacement containing $1, and bash expands $1 inside
+          # double quotes to an empty positional parameter.
+          BINJS=$(python -c "import re,pathlib;print(re.search(r'version:\s*\"([^\"]+)\"', pathlib.Path('bin/comfy-preflight.js').read_text()).group(1))")
+          BINTAG=$(python -c "import re,pathlib;print(re.search(r'tag:\s*\"([^\"]+)\"', pathlib.Path('bin/comfy-preflight.js').read_text()).group(1))")
+          DUNDER=$(python -c "import re,pathlib;print(re.search(r'__version__ = \"([^\"]+)\"', pathlib.Path('src/comfy_preflight/__init__.py').read_text()).group(1))")
+          if [ "$BINTAG" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::bin/comfy-preflight.js pins tag $BINTAG but this release is $GITHUB_REF_NAME - npm-launcher would fetch the wrong release"
+            exit 1
+          fi
+          echo "tag=$TAG pyproject=$PYPROJECT package.json=$PKGJSON bin=$BINJS __version__=$DUNDER"
+          fail=0
+          for pair in "pyproject:$PYPROJECT" "package.json:$PKGJSON" "bin/comfy-preflight.js:$BINJS" "__init__.py:$DUNDER"; do
+            name="${pair%%:*}"; val="${pair#*:}"
+            if [ "$val" != "$TAG" ]; then echo "::error::$name declares $val but the tag is $TAG"; fail=1; fi
+          done
+          [ "$fail" -eq 0 ]
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: binary-*
+          merge-multiple: true
+          path: assets
+
+      # GNU coreutils format, two spaces — npm-launcher's parseChecksumsTxt
+      # matches /^([a-f0-9]{64})\s{1,2}(.+)$/ and keys the map on the BASENAME,
+      # so this must be generated from inside the directory.
+      - name: Generate checksums
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          cd assets
+          sha256sum * > "checksums-${VERSION}.txt"
+          cat "checksums-${VERSION}.txt"
+
+      # The full verify gate: suite in three interpreter modes, sdist + wheel,
+      # and the wheel installed into a clean venv running a real VERB from
+      # outside the checkout. This is the same command CI runs and the same one
+      # the rig runs, so none of the three can be green on something the others
+      # are not.
+      - name: Verify
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]" build
+          python verify.py
+
+      # The Release must exist WITH its assets before anyone can npx: the
+      # launcher fetches checksums + binary from this tag at run time.
+      - name: Cut the GitHub Release with binaries + dists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NOTES=".github/release-notes-${GITHUB_REF_NAME}.md"
+          if [ -f "$NOTES" ]; then
+            gh release create "${GITHUB_REF_NAME}" \
+              --title "comfy-preflight ${GITHUB_REF_NAME}" \
+              --notes-file "$NOTES" --verify-tag assets/* dist/*
+          else
+            gh release create "${GITHUB_REF_NAME}" \
+              --title "comfy-preflight ${GITHUB_REF_NAME}" \
+              --generate-notes --verify-tag assets/* dist/*
+          fi
+
+      - name: Publish to PyPI (OIDC trusted publishing)
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+      # Node 22 ships npm 10.9, which signs provenance but cannot negotiate the
+      # OIDC auth path (the registry PUT returns a misleading 404). In-place
+      # `npm i -g npm@latest` races the bundled arborist and breaks, so install
+      # into a sandbox and shadow it on PATH.
+      - name: Install npm >=11.5 in a sandbox for OIDC
+        run: |
+          SANDBOX="$HOME/.npm-cli-sandbox"
+          mkdir -p "$SANDBOX"
+          pushd "$SANDBOX" >/dev/null
+          echo '{"name":"npm-cli-sandbox","version":"0.0.0","private":true}' > package.json
+          npm install --no-save --no-audit --no-fund --silent npm@latest
+          popd >/dev/null
+          echo "$SANDBOX/node_modules/.bin" >> "$GITHUB_PATH"
+          "$SANDBOX/node_modules/.bin/npm" --version
+
+      - name: npm pack dry-run (verify tarball shape)
+        run: npm pack --dry-run
+
+      - name: Publish to npm with provenance (OIDC trusted publisher)
+        run: npm publish --provenance --access public

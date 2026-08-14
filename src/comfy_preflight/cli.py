@@ -18,7 +18,12 @@ and follow from its laws rather than from taste.
 |---|---|
 | 0 | nothing halted — PASS, ADVISORY or NOT_APPLICABLE, each named in the output |
 | 1 | HALT — a defect was found |
-| 2 | usage or input error — bad arguments, unreadable file, unparseable graph |
+| 2 | **nothing was examined** — bad arguments, unreadable file, unparseable graph, or an internal error |
+
+**Exit 2 is one code for two causes on purpose.** A bad path and a bug in this package differ in
+whose fault they are, and the message says which — but they do not differ in what the caller may
+conclude, which is *nothing about the graph*. Splitting them would invite a caller to treat one
+as a soft failure. The distinction that matters to an exit code is examined / not examined.
 
 **ADVISORY exits 0 deliberately.** A nonzero exit stops a `&&` chain, which would make the
 advisory a halt in every shell that runs one — and Amendment 2 rules check 8 advisory precisely
@@ -189,6 +194,30 @@ def build_parser() -> argparse.ArgumentParser:
         help="model family for check 5's frame rule (default: qwen; others are declared absent)",
     )
     check.add_argument("--json", action="store_true", help="emit the structured result as JSON")
+    check.add_argument(
+        "--debug",
+        action="store_true",
+        help=(
+            "re-raise an internal error with its traceback. Without it an unexpected failure is "
+            "reported as a structured error and exits 2 - a stack trace at a user is not an "
+            "error message"
+        ),
+    )
+
+    mcp = sub.add_parser(
+        "mcp",
+        help="serve the preflight tool over MCP on stdio (a transport, not the production gate)",
+        description=(
+            "Serve the same in-process preflight() over an MCP stdio transport. Requires the "
+            "optional 'mcp' extra. THIS IS NOT THE PRODUCTION GATE: reading a HALT over a "
+            "transport and submitting elsewhere is a shell chain with a protocol in the middle."
+        ),
+    )
+    mcp.add_argument(
+        "--debug",
+        action="store_true",
+        help="re-raise an internal error with its traceback instead of reporting it structurally",
+    )
     return parser
 
 
@@ -267,15 +296,42 @@ def main(argv: list[str] | None = None, out=None, err=None) -> int:
         return int(exc.code or 0)
 
     try:
-        graph = _load_graph(args.graph, "graph")
-        register = _load_register(args.register) if args.register else None
-        dims = _parse_dims(args.input_dims) if args.input_dims else None
-        saved = _load_graph(args.saved, "saved graph") if args.saved else None
-        consumer = _parse_consumer(args.consumer) if args.consumer else None
-        schema = _load_schema(args.schema) if args.schema else None
+        if args.verb == "mcp":
+            return _serve_mcp(err)
+        return _run_check(args, out, err)
     except UsageError as exc:
         print(f"{PROGRAM}: {exc}", file=err)
         return EXIT_USAGE
+    except Exception as exc:  # noqa: BLE001 - the last line before a traceback reaches a user
+        # A stack trace is not an error message. It is also not nothing: --debug re-raises so a
+        # developer keeps the full frame, and the structured form always names how to get it.
+        if getattr(args, "debug", False):
+            raise
+        print(f"{PROGRAM}: INTERNAL_ERROR: {type(exc).__name__}: {exc}", file=err)
+        print(
+            "  hint: this is a bug in comfy-preflight, not a defect in your graph. NOTHING was "
+            "examined and no claim is made about the graph. Re-run with --debug for the "
+            "traceback, and please report it at "
+            "https://github.com/mcp-tool-shop-org/comfy-preflight/issues",
+            file=err,
+        )
+        return EXIT_USAGE
+
+
+def _serve_mcp(err) -> int:
+    """Start the stdio MCP server. Imported lazily so `check` never pays for the optional extra."""
+    from comfy_preflight import mcp_server
+
+    return mcp_server.main()
+
+
+def _run_check(args, out, err) -> int:
+    graph = _load_graph(args.graph, "graph")
+    register = _load_register(args.register) if args.register else None
+    dims = _parse_dims(args.input_dims) if args.input_dims else None
+    saved = _load_graph(args.saved, "saved graph") if args.saved else None
+    consumer = _parse_consumer(args.consumer) if args.consumer else None
+    schema = _load_schema(args.schema) if args.schema else None
 
     try:
         result = preflight(

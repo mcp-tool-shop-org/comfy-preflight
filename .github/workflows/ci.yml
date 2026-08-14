@@ -6,12 +6,14 @@ on:
       - "pyproject.toml"
       - "src/**"
       - "tests/**"
+      - "verify.py"
       - ".github/workflows/**"
   pull_request:
     paths:
       - "pyproject.toml"
       - "src/**"
       - "tests/**"
+      - "verify.py"
       - ".github/workflows/**"
   workflow_dispatch:
 
@@ -33,18 +35,33 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install
-        run: python -m pip install -e ".[dev]"
+        run: python -m pip install -e ".[dev]" build
 
-      - name: Test
-        run: python -m pytest
+      # ONE gate, and the same one the release workflow runs. CI used to run three bare
+      # `pytest` legs here; verify.py runs those same three interpreter modes AND builds the
+      # dists AND installs the wheel into a clean venv to run a real verb from outside the
+      # checkout. Splitting them meant CI could be green on something the release then failed.
+      #
+      # The three interpreter modes are not redundancy: -O and PYTHONOPTIMIZE delete `assert`,
+      # and this package's gates `raise` precisely so they survive it.
+      - name: Verify (suite x3 modes, build, clean-venv smoke)
+        run: python verify.py
 
-      # The gates must survive assert-stripping. A check that decides whether an
-      # irreversible step proceeds cannot be a bare `assert`: -O deletes it silently and
-      # execution continues past it. This leg fails if any gate degrades to an assert.
-      - name: Test under -O (assert-stripped)
-        run: python -O -m pytest
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Test under PYTHONOPTIMIZE=1
-        env:
-          PYTHONOPTIMIZE: "1"
-        run: python -m pytest
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The package has ZERO runtime dependencies, so this audits the dev/optional surface —
+      # pytest, build, and the mcp SDK. A zero-dependency package is not the same as an
+      # unaudited one: the extras are what a user installing [mcp] actually gets.
+      - name: pip-audit
+        run: |
+          python -m pip install --upgrade pip pip-audit
+          python -m pip install -e ".[dev]"
+          pip-audit --strict --progress-spinner off
