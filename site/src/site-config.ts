@@ -15,10 +15,10 @@ export const config: SiteConfig = {
 
   hero: {
     badge: 'Open source · MIT',
-    headline: 'It will run.',
-    headlineAccent: 'But is it the graph you meant?',
+    headline: 'The wrong graph bills the same.',
+    headlineAccent: 'Catch it before you submit.',
     description:
-      'A Comfy Cloud dry_run returned status: validated on a graph whose VAEDecode read its own output. The provider’s validator answers whether a graph is well-formed enough to run — not whether it is the graph you meant. comfy-preflight lives in that gap, and runs before the credits are spent.',
+      'A Comfy Cloud dry_run returned status: validated on a graph whose VAEDecode read its own output. A provider’s validator answers whether a graph will run — not whether it’s the graph you meant. comfy-preflight checks the difference in the seconds before submission, in-process, where a shell step can’t walk past it.',
     primaryCta: { href: '#usage', label: 'Get started' },
     secondaryCta: { href: 'handbook/', label: 'Read the Handbook' },
     previews: [

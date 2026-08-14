@@ -4,7 +4,10 @@ All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] — 2026-08-14
+
+First release. The checks, the aggregator, three surfaces over one in-process function, and the
+full ship gate.
 
 ### Added
 - Repo scaffold: packaging (zero runtime dependencies), MIT license, CI on `ubuntu-latest`
@@ -62,6 +65,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this pr
   a nonzero status stops a `&&` chain and would turn an advisory into a halt.
 - **The MCP surface** (`python -m comfy_preflight.mcp_server`, stdio), a transport over the same
   in-process function returning its structured result verbatim. `mcp` stays an optional extra.
+- **Check 5's ÷16 preference is an `ADVISORY`**, not a note on a PASS. ÷8 still halts and ÷16
+  still never does — what changed is that the finding now travels as a located `Defect` a caller
+  can act on instead of as prose in a field that merges into a green verdict.
+- **`EntryKind.STUDIO_MEASURED`** on the envelope table: an entry may justify itself with a
+  studio measurement (experiment id, record locator, measured date, finding) instead of a vendor
+  citation. The two authorities are mutually exclusive by construction. **The kind ships with no
+  data**, and a test asserts it stays empty.
+- **`comfy-preflight check`**, the CLI verb, plus a **`comfy-preflight mcp`** verb so one frozen
+  binary serves both doors with no Python on the machine.
+- **`--debug`**, and an outermost guard that converts any unexpected exception into a structured
+  `INTERNAL_ERROR` naming whose fault it is and what the caller may conclude. A stack trace is
+  not an error message.
+- **`verify.py`** — one gate: the suite in three interpreter modes, sdist + wheel, then the wheel
+  installed into a clean venv running a real verb **from outside the checkout**. CI and the
+  release workflow run this same command.
+- **Publishing to both registries from one workflow** via OIDC trusted publishing (no tokens),
+  with SHA256-verified PyInstaller binaries behind an `npx` launcher, and a version gate across
+  four declaring sites.
+- **Dependency auditing in CI** (`pip-audit --strict`) over the declared dependency surface.
+- Logo, favicons, landing page and a five-page Starlight handbook.
 
 ### Fixed
 - The `mcp` optional dependency bound was `>=1.0`, but the surface is built on
