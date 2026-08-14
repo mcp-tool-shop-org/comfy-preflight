@@ -1,0 +1,311 @@
+#!/usr/bin/env python3
+"""Draw the comfy-preflight wordmark and favicons, deterministically.
+
+    python docs/brand/make_logo.py <outdir>
+
+**Not part of the package.** It needs Pillow, which `comfy-preflight` deliberately does not
+depend on, and it lives outside `src/` so it never reaches a wheel. It is committed because a
+brand asset nobody can regenerate is one nobody can correct — this repo's whole standard.
+
+## The form is the `armature` wordmark's, matched by measurement rather than by eye
+
+Every constant below was read off `mcp-tool-shop-org/brand/logos/armature/readme.png` with PIL:
+canvas 1600x540, a vertical background gradient from (44,45,51) to (29,30,35), name text
+(231,225,219), tagline (141,141,149), a 2px rule at (86,88,96), the subject occupying the left
+third, and the rule drawn to the TAGLINE's width rather than the name's.
+
+The type is flat **Segoe UI Semilight, tracked out**, exactly as the armature commit records:
+the original heavy-grotesque treatment with bevel and gloss "was fighting the delicacy of the
+wire", so the copper is the only thing carrying dimension. Nothing here has a bevel, a gloss or
+a drop shadow.
+
+## Why the subject is drawn rather than generated
+
+The armature mark's own commit records that generation was **tried and lost**: the Director's
+render was "better than anything the generated rounds produced." A node graph is worse for
+diffusion than a figure was — it is clean geometry with exact topology, which is precisely what
+a diffusion model approximates into mush. Drawing it also makes the mark reproducible and
+costs nothing.
+
+## What the subject is, and why this one
+
+A node graph in copper wire, because that is literally what the product operates on. **One link
+leaves a node and curves back into that same node** — the self-link, the founding defect: a
+hand-retyped payload with `VAEDecode.samples = ["14", 0]` that a provider's `dry_run` returned
+`status: validated` on. The mark carries the case the product exists for, and the offending
+wire is the one lit brightest.
+"""
+
+from __future__ import annotations
+
+import math
+import pathlib
+import sys
+
+from PIL import Image, ImageDraw, ImageFont
+
+# ---- measured off logos/armature/readme.png --------------------------------------------------
+W, H = 1600, 540
+BG_TOP = (44, 45, 51)
+BG_BOTTOM = (29, 30, 35)
+NAME_RGB = (231, 225, 219)
+TAGLINE_RGB = (141, 141, 149)
+RULE_RGB = (86, 88, 96)
+
+TEXT_X = 648          # armature's name/rule/tagline all start at 643-650
+NAME_BASELINE = 305   # armature's name bbox bottom
+RULE_Y = 340
+TAGLINE_TOP = 376
+
+COPPER_LIT = (206, 168, 150)
+COPPER_MID = (168, 118, 96)
+COPPER_DARK = (104, 70, 58)
+
+SEMILIGHT = "C:/Windows/Fonts/segoeuisl.ttf"
+REGULAR = "C:/Windows/Fonts/segoeui.ttf"
+
+NAME = "comfy-preflight"
+# Same two-beat cadence and near-identical length as armature's 40-character line. It is the
+# spec's own sentence: the provider's validator answers "is this well-formed enough to run"; it
+# does not answer "is this the graph you meant".
+TAGLINE = "It will run. But is it the graph you meant?"
+
+
+def background() -> Image.Image:
+    im = Image.new("RGB", (W, H))
+    px = im.load()
+    for y in range(H):
+        t = y / (H - 1)
+        row = tuple(round(BG_TOP[i] + (BG_BOTTOM[i] - BG_TOP[i]) * t) for i in range(3))
+        for x in range(W):
+            px[x, y] = row
+    return im
+
+
+def _tracked(draw: ImageDraw.ImageDraw, xy, text, font, fill, tracking: float):
+    """Draw text with letter-spacing. PIL has no tracking, so glyphs are placed one at a time."""
+    x, y = xy
+    for ch in text:
+        draw.text((x, y), ch, font=font, fill=fill, anchor="ls")
+        x += draw.textlength(ch, font=font) + tracking
+    return x
+
+
+def _tracked_width(draw: ImageDraw.ImageDraw, text, font, tracking: float) -> float:
+    return sum(draw.textlength(c, font=font) for c in text) + tracking * (len(text) - 1)
+
+
+def shade(t: float) -> tuple[int, int, int]:
+    """Copper along a lit->dark ramp. `t` is 0 at the lit end, 1 at the dark end.
+
+    This is the only dimension in the mark, which is the armature form's rule: flat type, and
+    the copper carries the light.
+    """
+    if t < 0.5:
+        a, b, u = COPPER_LIT, COPPER_MID, t / 0.5
+    else:
+        a, b, u = COPPER_MID, COPPER_DARK, (t - 0.5) / 0.5
+    return tuple(round(a[i] + (b[i] - a[i]) * u) for i in range(3))
+
+
+def draw_graph(im: Image.Image, cx: int, cy: int, scale: float, ss: int = 4) -> None:
+    """The copper node graph, supersampled so the wire keeps the armature's delicacy.
+
+    Two drafts were thrown away here and both failures are worth the lines, because both look
+    like "the curve is wrong" and neither is:
+
+    1. Colouring each segment separately to fake an along-wire gradient produced a hairy, dotted
+       wire — PIL leaves a gap at every joint when consecutive segments differ in colour.
+    2. Drawing one polyline with `joint="curve"` and 120 points produced a *subtler* version of
+       the same fuzz: `joint="curve"` stamps an ellipse at every interior joint, and 120 stamps
+       along a short curve survive the downsample as texture rather than dissolving into it.
+
+    So: few points (segments are long), one flat tone per wire, and no overdraw. Dimension comes
+    from the tone chosen per wire and per node, which is the armature form's rule anyway — flat
+    type, and the copper carries the light.
+    """
+    box = int(430 * scale)
+    canvas = Image.new("RGBA", (box * ss, box * ss), (0, 0, 0, 0))
+    d = ImageDraw.Draw(canvas)
+    S = ss
+    unit = box / 100.0  # work in a 0-100 space, then scale
+
+    def P(pt):
+        return (pt[0] * unit * S, pt[1] * unit * S)
+
+    wire = max(2, int(round(2.3 * unit * S)))
+
+    nw, nh = 21.0, 13.5
+    # A load/encode pair feeding a sampler, which feeds a decoder and a save. The decoder is
+    # the node that links to itself, because node 14 in the recorded incident was the VAEDecode.
+    nodes = {
+        "in":   (15, 21),
+        "in2":  (15, 63),
+        "mid":  (47, 42),
+        "self": (80, 27),
+        "out":  (80, 72),
+    }
+
+    def rect(c):
+        return (c[0] - nw / 2, c[1] - nh / 2, c[0] + nw / 2, c[1] + nh / 2)
+
+    def bez(p0, p1, p2, p3, steps=26):
+        pts = []
+        for i in range(steps + 1):
+            u = i / steps
+            pts.append((
+                (1 - u) ** 3 * p0[0] + 3 * (1 - u) ** 2 * u * p1[0]
+                + 3 * (1 - u) * u ** 2 * p2[0] + u ** 3 * p3[0],
+                (1 - u) ** 3 * p0[1] + 3 * (1 - u) ** 2 * u * p1[1]
+                + 3 * (1 - u) * u ** 2 * p2[1] + u ** 3 * p3[1],
+            ))
+        return pts
+
+    def stroke(pts, base):
+        """One continuous wire in one flat tone. Few joints, so the joint stamps disappear."""
+        d.line([P(p) for p in pts], fill=base, width=wire, joint="curve")
+
+    def link(a, b):
+        """Right port of `a` to left port of `b`, with horizontal control handles."""
+        ax, ay = nodes[a][0] + nw / 2, nodes[a][1]
+        bx, by = nodes[b][0] - nw / 2, nodes[b][1]
+        dx = max(9.0, (bx - ax) * 0.55)
+        return bez((ax, ay), (ax + dx, ay), (bx - dx, by), (bx, by))
+
+    # ---- the ordinary links, drawn first so nodes sit over them ---------------------------
+    stroke(link("in", "mid"), shade(0.34))
+    stroke(link("in2", "mid"), shade(0.62))
+    stroke(link("mid", "self"), shade(0.26))
+    stroke(link("mid", "out"), shade(0.66))
+
+    # ---- THE SELF-LINK -------------------------------------------------------------------
+    # Out of the node's RIGHT port, up and over, and back down into its own LEFT port. It is
+    # drawn brightest and it is the only closed path in the mark, because it is the defect the
+    # product exists for: `VAEDecode.samples = ["14", 0]`, which a provider's dry_run returned
+    # `status: validated` on.
+    sx, sy = nodes["self"]
+    right = (sx + nw / 2, sy)
+    left = (sx - nw / 2, sy)
+    # Tight against the node on purpose. An earlier pass arced 20 units clear of it and read
+    # as a speech balloon rather than a wire returning to its own port — the loop has to look
+    # like it belongs to the node, not like it is pointing at it.
+    top = sy - nh / 2 - 12.5
+    loop = bez(right, (right[0] + 11.0, right[1] - 7.0), (right[0] + 3.0, top), (sx + 1.0, top))
+    loop += bez((sx + 1.0, top), (sx - 11.0, top), (left[0] - 10.0, left[1] - 8.0), left)
+    stroke(loop, COPPER_LIT)
+
+    # the arrowhead, landing on the node it left — pointing INTO the left port
+    tipx, tipy = left
+    d.line([P((tipx - 4.6, tipy - 3.6)), P((tipx, tipy))], fill=COPPER_LIT, width=wire,
+           joint="curve")
+    d.line([P((tipx - 5.6, tipy + 2.2)), P((tipx, tipy))], fill=COPPER_LIT, width=wire,
+           joint="curve")
+
+    # ---- nodes ---------------------------------------------------------------------------
+    for name, c in nodes.items():
+        x0, y0, x1, y1 = rect(c)
+        t = 0.06 if name == "self" else 0.30 + 0.42 * (c[1] / 100.0)
+        d.rounded_rectangle(
+            [P((x0, y0)), P((x1, y1))], radius=3.4 * unit * S, outline=shade(t), width=wire
+        )
+        for px_ in (x0, x1):
+            d.ellipse(
+                [P((px_ - 1.7, c[1] - 1.7)), P((px_ + 1.7, c[1] + 1.7))],
+                fill=shade(max(0.0, t - 0.10)),
+            )
+
+    canvas = canvas.resize((box, box), Image.LANCZOS)
+    im.paste(canvas, (cx - box // 2, cy - box // 2), canvas)
+
+
+def build_wordmark() -> Image.Image:
+    im = background()
+    draw = ImageDraw.Draw(im)
+
+    # The subject sits where armature's figure does: centred near x=400 in the left third.
+    draw_graph(im, cx=392, cy=266, scale=0.95)
+
+    # ---- the name: flat, tracked out, no bevel and no shadow -----------------------------
+    size, tracking = 96, 6.0
+    font = ImageFont.truetype(SEMILIGHT, size)
+    # Fit the name inside the right column, shrinking rather than overflowing. "comfy-preflight"
+    # is 15 characters against armature's 8, so the same point size would run off the canvas —
+    # the form's proportions are what is being matched, not its absolute type size.
+    while _tracked_width(draw, NAME, font, tracking) > (W - TEXT_X - 110) and size > 60:
+        size -= 2
+        font = ImageFont.truetype(SEMILIGHT, size)
+    _tracked(draw, (TEXT_X, NAME_BASELINE), NAME, font, NAME_RGB, tracking)
+
+    # ---- the tagline, and the rule drawn to ITS width (armature's rule matches the tagline)
+    tag_font = ImageFont.truetype(REGULAR, 30)
+    tag_track = 0.6
+    tag_w = _tracked_width(draw, TAGLINE, tag_font, tag_track)
+    draw.rectangle([TEXT_X - 5, RULE_Y, TEXT_X - 5 + tag_w, RULE_Y + 1], fill=RULE_RGB)
+    _tracked(draw, (TEXT_X, TAGLINE_TOP + 26), TAGLINE, tag_font, TAGLINE_RGB, tag_track)
+
+    return im
+
+
+def build_favicon(px: int) -> Image.Image:
+    """A purpose-drawn SECOND DRAWING, not a downscale and not the wordmark's idea shrunk.
+
+    The armature record measured this failure and it repeated here exactly: a detailed wire mark
+    at 32px "turns to a copper smudge, and thickening the strokes by dilation just makes it a
+    gingerbread man." The first attempt at this icon was the wordmark's self-linking node scaled
+    down, and at 16-64px it read unmistakably as a **hamburger** — a bun over a patty. Looked at
+    rather than assumed, which is the only way that gets caught.
+
+    So the icon draws a different idea from the same product: **a wire arriving at a gate and
+    stopping short of it.** Three strokes, no enclosed shapes to fill in at small size, and the
+    gap is the meaning — the run that did not proceed. It is the product in one glyph, and it
+    cannot collapse into food.
+    """
+    ss = 8
+    size = px * ss
+    im = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle([0, 0, size - 1, size - 1], radius=size * 0.22, fill=(36, 37, 43, 255))
+
+    mid = size * 0.52
+    w = max(2, int(size * 0.095))
+
+    # The gate: a full-height bar, the brightest thing in the icon.
+    bar_x = size * 0.70
+    d.rounded_rectangle(
+        [bar_x - w / 2, size * 0.20, bar_x + w / 2, size * 0.80],
+        radius=w / 2, fill=COPPER_LIT,
+    )
+
+    # The wire, arriving from the left and STOPPING. The gap before the bar is the whole idea,
+    # so it is sized generously — at 16px a subtle gap closes up and the glyph becomes a plus.
+    d.rounded_rectangle(
+        [size * 0.18, mid - w / 2, size * 0.50, mid + w / 2], radius=w / 2, fill=COPPER_MID
+    )
+    # One node on the wire, upstream, so it reads as a graph rather than an arrow.
+    d.ellipse(
+        [size * 0.13, mid - w * 1.15, size * 0.13 + w * 2.3, mid + w * 1.15], fill=COPPER_MID
+    )
+
+    return im.resize((px, px), Image.LANCZOS)
+
+
+def main() -> int:
+    out = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else ".")
+    out.mkdir(parents=True, exist_ok=True)
+
+    mark = build_wordmark()
+    mark.save(out / "readme.png")
+    print(f"wrote {out / 'readme.png'}  {mark.size[0]}x{mark.size[1]}")
+
+    for px in (16, 32, 64, 180, 512):
+        icon = build_favicon(px)
+        icon.save(out / f"favicon-{px}.png")
+    build_favicon(180).save(out / "apple-touch-icon.png")
+    ico = build_favicon(64)
+    ico.save(out / "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)])
+    print(f"wrote favicons + favicon.ico into {out}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

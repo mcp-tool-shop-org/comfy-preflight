@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="comfy-preflight">
+  <!--
+    The gate icon: a node on a wire, arriving at a gate and stopping short of it.
+    The GAP is the meaning - the run that did not proceed.
+
+    Hand-authored to match docs/brand/make_logo.py's build_favicon() geometry, which works in
+    fractions of the icon box: bar at x=0.70, wire 0.18->0.50, node centred at 0.52 vertically,
+    stroke weight 0.095. Multiplied by 64 here.
+
+    This file exists because site-theme's BaseLayout hardcodes <link rel="icon" href="{base}
+    favicon.svg"> with no prop and no head slot, so every repo on the theme points at a file
+    none of them ship. That org-wide 404 was found on armature; this is the one-file fix.
+  -->
+  <rect width="64" height="64" rx="14" fill="#24252B"/>
+  <!-- the node, upstream on the wire -->
+  <ellipse cx="15.3" cy="33.3" rx="7" ry="7" fill="#A87660"/>
+  <!-- the wire, stopping short -->
+  <rect x="11.5" y="30.3" width="20.5" height="6.1" rx="3.05" fill="#A87660"/>
+  <!-- the gate -->
+  <rect x="41.8" y="12.8" width="6.1" height="38.4" rx="3.05" fill="#CEA896"/>
+</svg>
