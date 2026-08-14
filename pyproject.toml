@@ -27,8 +27,13 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-mcp = ["mcp>=1.0"]
-dev = ["pytest>=8.0"]
+# mcp>=2.0, not >=1.0: the server class the surface is built on is `mcp.server.MCPServer`,
+# and 2.0 removed the 1.x `mcp.server.fastmcp.FastMCP`. The bound was verified against the
+# installed SDK rather than recalled - a >=1.0 bound would resolve to a version that
+# ImportErrors on first use, which is the same defect class as a console script pointing at an
+# absent module.
+mcp = ["mcp>=2.0"]
+dev = ["pytest>=8.0", "mcp>=2.0"]
 
 # The console script, restored now that the CLI it names exists. The scaffold declared this
 # entry before any CLI module did, which installs a command that raises ImportError on first
