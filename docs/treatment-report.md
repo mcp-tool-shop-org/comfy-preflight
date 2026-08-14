@@ -186,7 +186,42 @@ criterion names the underscore path, which is stale for the current Starlight. T
 is real — 6 HTML files indexed — and live at `/comfy-preflight/pagefind/pagefind.js`. **Reported
 against the playbook, not worked around here.**
 
-**d. shipcheck under-detects this repo as `[all] [pypi]`.** It reads `pyproject.toml` and cannot
+**d. Two defects on the README header, found by the Director reading the rendered page** — not
+by any check in this arc, and both were mine.
+
+*The logo carried a tagline this arc had already rejected.* It read *"It will run. But is it the
+graph you meant?"* — the exact sentence cut from the landing-page hero for being a riddle whose
+*"it"* has no antecedent. The hero was fixed and the permanent brand asset was left carrying the
+discarded draft, so the two front doors disagreed with each other. **A wording decision has to
+propagate to every surface that carries it, and nothing in this arc checked that.**
+
+*The mark floated in its canvas, and measuring said so precisely:* 59.3% of canvas height against
+the reference's 79.1%, margins of 88/131 against 55/57, sitting 22px above centre. **The cause
+was orientation, not scale** — armature's figure is portrait (344×427), which is how it fills the
+height; a left-to-right node graph is landscape and could never fill more than ~59% before
+colliding with the text column at x=648. Scaling it only moved the imbalance (a second pass hit
+75.7% height but pushed the centre to 228 and the margins to 24/106). The graph is now a vertical
+spine, and the drawing is **cropped to its own ink bbox and pasted centred** rather than centring
+the drawing box — because the box is not the picture, and the self-loop and port pips push the
+ink off-centre inside it. Final: margins 44/45, centre 269.0 against 270.0, 83.3% of height, left
+margin 228 against the reference's 228.
+
+The self-link took three tries. A wide arc read as a speech balloon; a short bezier collapsed
+into a cramped stub; the third drew a 34° scribble because interpolating start→end took the
+**short way** round the circle — silent, and it looks like a rendering bug rather than a maths
+bug. It is now a near-closed circle swept the long way, with the arrowhead derived from the
+path's own final tangent so it survives retuning.
+
+*And the badges were broken in public:* `npm invalid` and `pypi package or version not found`
+rendered red, because neither package is published — which the treatment playbook forbids in as
+many words. Removed until the release commit, when they will resolve.
+
+**The lesson, stated against myself:** every other defect in this section was caught by an
+instrument I ran. These two shipped to a public surface and were caught by a person looking at
+it. The measurement that diagnosed the composition existed the whole time — I had used it to
+*match* the reference and never re-ran it to *check my own output*.
+
+**e. shipcheck under-detects this repo as `[all] [pypi]`.** It reads `pyproject.toml` and cannot
 see that the repo also ships an npm launcher, a console script and an MCP server. Nine applicable
 lines would have been skipped. The tags are corrected by hand in `SHIP_GATE.md` with that reason
 stated at the top. **Reported against shipcheck's detector, not worked around silently.**
@@ -256,7 +291,7 @@ The release order, which is law:
 | NAMED_COMPENSATORS | 3 | §8, including the brand-repo push whose compensator must be *paired* with a README revert or the image 404s, and honest that four rows are the Director's and were not performed |
 | DECOMPOSE_BY_SECRETS | 3 | the registry keeps one adapter per check so no check's requirements leak into another's; the envelope table is data beside the code at documentation cadence; the two entry KINDS separate vendor authority from studio authority and are mutually exclusive; brand generation lives outside `src/` and never reaches a wheel |
 | UNCERTAINTY_GATED_HUMANS | 3 | the headline was routed to the Director as a taste call with four real directions rather than decided unilaterally after his feedback; §5c and §5d are reported against their owners rather than worked around; the measured entry kind ships empty pending a ruling; the contrastive frame is stated throughout — *you probably expected a generation spend; I drew it, because this form's own record says generation lost* |
-| EXTERNAL_VERIFIER | 3 | the brand form was verified by measuring the reference asset rather than eyeballing it; the favicon was verified by rendering at true size and looking, which is the only thing that caught the hamburger; the live site was verified by fetching the deployed HTML, not by trusting the build; CI was verified by reading the failing logs; `verify.py` verifies the wheel from outside the checkout, where the packaging defects actually live |
+| EXTERNAL_VERIFIER | 2 | the brand form was verified by measuring the reference asset rather than eyeballing it; the favicon was verified by rendering at true size and looking, which is the only thing that caught the hamburger; the live site was verified by fetching the deployed HTML, not by trusting the build; CI was verified by reading the failing logs; `verify.py` verifies the wheel from outside the checkout, where the packaging defects actually live. **Marked down from 3 because of §5d**: the brand asset was measured against the reference to BUILD it and never re-measured to CHECK it, so two defects reached a public surface and a person caught them. The instrument existed and was not pointed at my own output. Remediation: the logo script now reports its own bbox/margins/centre against the reference constants, and any future asset change re-runs that comparison before it is pushed |
 
 ## 10. State
 
@@ -267,5 +302,5 @@ The release order, which is law:
 - **Ready and not fired:** `release.yml`, the npm launcher, the version gate. PyPI trusted
   publisher confirmed; npm's unverified from this seat.
 - **Blocked on the advisor:** translations (§7 step 1), then the release order.
-- **Open for the advisor:** §5c (playbook's stale pagefind path), §5d (shipcheck's detector),
+- **Open for the advisor:** §5c (playbook's stale pagefind path), §5e (shipcheck's detector),
   and whether a `STUDIO_MEASURED` entry gets ruled in from E35's sweep.

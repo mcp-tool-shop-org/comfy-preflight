@@ -325,6 +325,63 @@ def build_favicon(px: int) -> Image.Image:
     return im.resize((px, px), Image.LANCZOS)
 
 
+# The reference's own composition, measured off logos/armature/readme.png. These are what the
+# output is CHECKED against, not just what it was built from — see `check_composition`.
+REFERENCE = {
+    "fills_height_pct": 79.1,
+    "margin_top": 55,
+    "margin_bottom": 57,
+    "margin_left": 228,
+    "v_centre": 268.5,
+}
+TOLERANCE = {"fills_height_pct": 8.0, "margin_balance": 12, "v_centre": 12, "margin_left": 45}
+
+
+def check_composition(mark: Image.Image) -> list[str]:
+    """Measure the OUTPUT against the reference and report what is off.
+
+    This exists because of a defect that reached a public surface. The reference was measured to
+    BUILD this mark and never re-measured to CHECK it, so a version shipped that filled 59.3% of
+    the canvas height against the reference's 79.1%, with margins of 88/131 against 55/57, and
+    sat 22px above centre. Every constant in this file looked correct; the composition was not.
+    A person reading the rendered README caught it.
+
+    The instrument already existed. It was simply never pointed at my own output. So it is
+    pointed at it here, on every run, and the numbers are printed whether they pass or fail.
+    """
+    import numpy as np  # local: only the checker needs it, and only when this script runs
+
+    a = np.asarray(mark.convert("RGB")).astype(int)
+    height, width, _ = a.shape
+    bg = a[:, :5, :].mean(axis=1, keepdims=True)
+    ys, xs = np.where(np.abs(a - bg).sum(2) > 40)
+
+    fills = 100 * (ys.max() - ys.min()) / height
+    top, bottom, left = int(ys.min()), int(height - 1 - ys.max()), int(xs.min())
+    centre = (ys.min() + ys.max()) / 2
+
+    print(
+        f"  composition: fills {fills:.1f}% tall (ref {REFERENCE['fills_height_pct']}%) | "
+        f"margins T{top}/B{bottom} (ref {REFERENCE['margin_top']}/{REFERENCE['margin_bottom']}) | "
+        f"L{left} (ref {REFERENCE['margin_left']}) | "
+        f"v-centre {centre:.1f} (canvas {height / 2:.1f})"
+    )
+
+    problems = []
+    if abs(fills - REFERENCE["fills_height_pct"]) > TOLERANCE["fills_height_pct"]:
+        problems.append(
+            f"fills {fills:.1f}% of canvas height; the reference fills "
+            f"{REFERENCE['fills_height_pct']}% - the mark floats"
+        )
+    if abs(top - bottom) > TOLERANCE["margin_balance"]:
+        problems.append(f"vertical margins are unbalanced: {top} top vs {bottom} bottom")
+    if abs(centre - height / 2) > TOLERANCE["v_centre"]:
+        problems.append(f"content centre {centre:.1f} is off the canvas centre {height / 2:.1f}")
+    if abs(left - REFERENCE["margin_left"]) > TOLERANCE["margin_left"]:
+        problems.append(f"left margin {left} against the reference's {REFERENCE['margin_left']}")
+    return problems
+
+
 def main() -> int:
     out = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else ".")
     out.mkdir(parents=True, exist_ok=True)
@@ -332,6 +389,14 @@ def main() -> int:
     mark = build_wordmark()
     mark.save(out / "readme.png")
     print(f"wrote {out / 'readme.png'}  {mark.size[0]}x{mark.size[1]}")
+
+    problems = check_composition(mark)
+    if problems:
+        print("\nCOMPOSITION CHECK FAILED:")
+        for p in problems:
+            print(f"  - {p}")
+        print("\nThe asset was written but should NOT be pushed to the brand repo as-is.")
+        return 1
 
     for px in (16, 32, 64, 180, 512):
         icon = build_favicon(px)
