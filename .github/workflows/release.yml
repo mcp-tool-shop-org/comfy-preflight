@@ -66,14 +66,24 @@ jobs:
       # serves both doors and `npx @mcptoolshop/comfy-preflight mcp` reaches the
       # stdio server on a machine with no Python at all.
       #
-      # `--exclude-module mcp.cli` is load-bearing: mcp.cli imports typer and
-      # calls sys.exit(1) at import time when typer is absent, which aborts
-      # PyInstaller's analysis. Nothing here imports mcp.cli.
+      # `--collect-submodules mcp.server`, NOT `mcp` — and the difference failed
+      # a release. The SDK's `mcp.cli` imports typer and calls sys.exit(1) at
+      # import time when typer is absent; `collect_submodules` walks the package
+      # by IMPORTING every submodule, so pointing it at `mcp` executes that exit
+      # inside PyInstaller's isolated analysis child and aborts the build with
+      # "Child process call to _collect_submodules() failed".
+      #
+      # `--exclude-module mcp.cli` does NOT save you: the exclusion applies to
+      # what gets bundled, after collection has already imported it. Narrowing
+      # the collection root is the fix. Collection is needed at all because the
+      # CLI reaches the SDK through two lazy imports (the `mcp` verb imports
+      # mcp_server, which imports MCPServer inside a function), which static
+      # analysis does not follow.
       - name: Build the single-file binary
         shell: bash
         run: |
           pyinstaller --onefile --name comfy-preflight \
-            --collect-submodules mcp \
+            --collect-submodules mcp.server \
             --exclude-module mcp.cli \
             --exclude-module typer \
             --exclude-module IPython \

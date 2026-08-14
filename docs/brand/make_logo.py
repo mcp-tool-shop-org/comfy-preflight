@@ -3,6 +3,18 @@
 
     python docs/brand/make_logo.py <outdir>
 
+⚠ **THE SHIPPED WORDMARK IS NOT THIS SCRIPT'S OUTPUT.** The mark in the brand repo and in the
+README is the **Director's own file**, kept beside this script as `docs/brand/readme.png`. It is
+this construction with the type block balanced, and it won — which is the armature precedent
+holding for a second time: that repo's commit records its generated rounds losing to the
+Director's render, and the same happened here against a drawn one.
+
+What this script still owns is **the favicon set**, which is a purpose-drawn second drawing
+rather than a downscale (see `build_favicon`). `build_wordmark` is kept because it documents the
+construction the shipped mark uses and because `check_composition` measures ANY candidate
+against the reference — including the Director's, which it passes: 83.3% of canvas height,
+margins 44/45, left 228, vertical centre 269.0 against 270.0.
+
 **Not part of the package.** It needs Pillow, which `comfy-preflight` deliberately does not
 depend on, and it lives outside `src/` so it never reaches a wheel. It is committed because a
 brand asset nobody can regenerate is one nobody can correct — this repo's whole standard.
