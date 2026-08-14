@@ -16,7 +16,17 @@ name: Release
 on:
   push:
     tags: ['v*']
+  # The `tag` input is what makes a HALF-PUBLISHED release finishable. v1.0.0 published to
+  # PyPI and then failed at npm; without this, a dispatch from `main` would set
+  # GITHUB_REF_NAME to "main", the version gate would refuse it, and the only way to get npm
+  # to 1.0.0 would be a version bump that leaves the two registries permanently out of step.
+  # With it, the run checks out the TAG and publishes exactly what the tag contains.
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v1.0.0). Defaults to the ref this runs on.'
+        required: false
+        type: string
 
 permissions:
   contents: write      # GitHub Release + asset upload
@@ -25,6 +35,12 @@ permissions:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
+
+# One resolved release ref for both jobs: the dispatch input when given, otherwise the tag
+# that was pushed. Every step below reads RELEASE_TAG rather than GITHUB_REF_NAME, so a
+# dispatched re-run of an existing tag behaves identically to the original tag push.
+env:
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -51,6 +67,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
 
       - uses: actions/setup-python@v5
         with:
@@ -93,7 +111,7 @@ jobs:
       - name: Name it by the launcher's convention
         shell: bash
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${RELEASE_TAG#v}"
           mkdir -p out
           mv "dist/comfy-preflight${{ matrix.ext }}" \
              "out/comfy-preflight-${VERSION}-${{ matrix.label }}${{ matrix.ext }}"
@@ -106,7 +124,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${RELEASE_TAG#v}"
           BIN="$PWD/out/comfy-preflight-${VERSION}-${{ matrix.label }}${{ matrix.ext }}"
           chmod +x "$BIN" || true
           mkdir -p /tmp/smoke
@@ -139,6 +157,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ env.RELEASE_TAG }}
           fetch-depth: 0
 
       - uses: actions/setup-python@v5
@@ -156,7 +175,7 @@ jobs:
       # failing here.
       - name: Verify tag matches every declared version
         run: |
-          TAG="${GITHUB_REF_NAME#v}"
+          TAG="${RELEASE_TAG#v}"
           PYPROJECT=$(python -c "import tomllib,pathlib;print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
           PKGJSON=$(node -p "require('./package.json').version")
           # Extracted with python, NOT a node one-liner: the obvious node version
@@ -165,8 +184,8 @@ jobs:
           BINJS=$(python -c "import re,pathlib;print(re.search(r'version:\s*\"([^\"]+)\"', pathlib.Path('bin/comfy-preflight.js').read_text()).group(1))")
           BINTAG=$(python -c "import re,pathlib;print(re.search(r'tag:\s*\"([^\"]+)\"', pathlib.Path('bin/comfy-preflight.js').read_text()).group(1))")
           DUNDER=$(python -c "import re,pathlib;print(re.search(r'__version__ = \"([^\"]+)\"', pathlib.Path('src/comfy_preflight/__init__.py').read_text()).group(1))")
-          if [ "$BINTAG" != "$GITHUB_REF_NAME" ]; then
-            echo "::error::bin/comfy-preflight.js pins tag $BINTAG but this release is $GITHUB_REF_NAME - npm-launcher would fetch the wrong release"
+          if [ "$BINTAG" != "$RELEASE_TAG" ]; then
+            echo "::error::bin/comfy-preflight.js pins tag $BINTAG but this release is $RELEASE_TAG - npm-launcher would fetch the wrong release"
             exit 1
           fi
           echo "tag=$TAG pyproject=$PYPROJECT package.json=$PKGJSON bin=$BINJS __version__=$DUNDER"
@@ -188,7 +207,7 @@ jobs:
       # so this must be generated from inside the directory.
       - name: Generate checksums
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${RELEASE_TAG#v}"
           cd assets
           sha256sum * > "checksums-${VERSION}.txt"
           cat "checksums-${VERSION}.txt"
@@ -210,14 +229,22 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          NOTES=".github/release-notes-${GITHUB_REF_NAME}.md"
+          NOTES=".github/release-notes-${RELEASE_TAG}.md"
+          # A partial release leaves the GitHub Release already created. Re-creating it would
+          # abort the job before the registry publishes that still need to run, so an existing
+          # release is uploaded into rather than treated as an error.
+          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            echo "release ${RELEASE_TAG} already exists; uploading assets into it"
+            gh release upload "${RELEASE_TAG}" assets/* dist/* --clobber
+            exit 0
+          fi
           if [ -f "$NOTES" ]; then
-            gh release create "${GITHUB_REF_NAME}" \
-              --title "comfy-preflight ${GITHUB_REF_NAME}" \
+            gh release create "${RELEASE_TAG}" \
+              --title "comfy-preflight ${RELEASE_TAG}" \
               --notes-file "$NOTES" --verify-tag assets/* dist/*
           else
-            gh release create "${GITHUB_REF_NAME}" \
-              --title "comfy-preflight ${GITHUB_REF_NAME}" \
+            gh release create "${RELEASE_TAG}" \
+              --title "comfy-preflight ${RELEASE_TAG}" \
               --generate-notes --verify-tag assets/* dist/*
           fi
 
