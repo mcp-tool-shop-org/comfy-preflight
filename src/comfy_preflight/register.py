@@ -89,6 +89,67 @@ class AdapterRegister:
                     "'weight 0.0' reading this check exists to reject"
                 )
 
+    @classmethod
+    def from_dict(cls, data: object) -> AdapterRegister:
+        """Build a register from its serialized form. Raises ValueError on anything malformed.
+
+        The serialized shape lives with the type rather than with either caller, because the CLI
+        and the MCP both need it and a second copy would be a second opinion about what a
+        register is. Each caller wraps the ValueError in its own error surface.
+
+            {"declared": false, "known_cards": ["house_style_v2.safetensors"]}
+            {"declared": true, "card": "house_style_v2.safetensors", "weight": 0.75,
+             "card_aliases": ["other-namespace__house_style_v2.safetensors"]}
+
+        Unknown keys are REJECTED rather than ignored. A misspelled `known_card` silently
+        dropped would empty the vocabulary, and check 2 would then decline the clause that
+        misspelling was meant to enable — a typo turning a gate off quietly.
+        """
+        if not isinstance(data, dict):
+            raise ValueError(f"a register must be a JSON object, got {type(data).__name__}")
+
+        known = {"declared", "card", "weight", "known_cards", "card_aliases", "loader_classes"}
+        unknown = sorted(set(data) - known)
+        if unknown:
+            raise ValueError(
+                f"unknown register key(s) {unknown}; expected any of {sorted(known)}. "
+                "Unknown keys are rejected rather than ignored, because a misspelled key would "
+                "silently empty the vocabulary it was meant to fill"
+            )
+        if "declared" not in data:
+            raise ValueError(
+                "a register must state `declared`: true or false. There is no default, because "
+                "the no-adapter claim is the one this check exists to assert and it must be "
+                "made deliberately"
+            )
+        if not isinstance(data["declared"], bool):
+            raise ValueError("`declared` must be true or false")
+
+        def _cards(key: str) -> frozenset[str]:
+            raw = data.get(key, [])
+            if not isinstance(raw, list) or not all(isinstance(v, str) for v in raw):
+                raise ValueError(f"`{key}` must be a list of strings")
+            return frozenset(raw)
+
+        weight = data.get("weight")
+        if weight is not None and not isinstance(weight, (int, float)):
+            raise ValueError("`weight` must be a number or null")
+        card = data.get("card")
+        if card is not None and not isinstance(card, str):
+            raise ValueError("`card` must be a string or null")
+
+        kwargs: dict = {
+            "declared": data["declared"],
+            "card": card,
+            "weight": float(weight) if weight is not None else None,
+            "known_cards": _cards("known_cards"),
+            "card_aliases": _cards("card_aliases"),
+        }
+        if "loader_classes" in data:
+            kwargs["loader_classes"] = _cards("loader_classes")
+        # __post_init__ enforces the declared/card/weight coherence rules.
+        return cls(**kwargs)
+
     @property
     def acceptable_cards(self) -> frozenset[str]:
         """The declared card plus any alias that names the same adapter.

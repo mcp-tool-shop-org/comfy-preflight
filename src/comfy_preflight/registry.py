@@ -214,10 +214,13 @@ REGISTRY: tuple[RegisteredCheck, ...] = (
 #       graph-structural operand at all.
 #   7 — anchor reproduction: needs the graph BUILDER, and the corpus holds outputs rather than
 #       the scripts that made them. Whether a builder is reachable is unresolved.
+# ASCII only, like every other runtime-emitted string in this package: these reach a Windows
+# console, where a cp1252 encoder renders an em dash as a replacement character. Prose in
+# docstrings and comments is free to use them; anything a user sees printed is not.
 NOT_REGISTERED: dict[int, str] = {
-    3: "recipe-vs-profile agreement — no subject-profile fixture in this repo",
-    6: "estimate before submit — transport-side; no graph-structural operand",
-    7: "anchor reproduction — needs the builder; the corpus holds outputs, not builders",
+    3: "recipe-vs-profile agreement - no subject-profile fixture in this repo",
+    6: "estimate before submit - transport-side; no graph-structural operand",
+    7: "anchor reproduction - needs the builder; the corpus holds outputs, not builders",
 }
 
 
