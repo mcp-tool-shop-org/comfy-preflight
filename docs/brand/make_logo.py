@@ -65,10 +65,12 @@ SEMILIGHT = "C:/Windows/Fonts/segoeuisl.ttf"
 REGULAR = "C:/Windows/Fonts/segoeui.ttf"
 
 NAME = "comfy-preflight"
-# Same two-beat cadence and near-identical length as armature's 40-character line. It is the
-# spec's own sentence: the provider's validator answers "is this well-formed enough to run"; it
-# does not answer "is this the graph you meant".
-TAGLINE = "It will run. But is it the graph you meant?"
+# The line the landing page leads on, so the two front doors say the same thing. An earlier
+# draft read "It will run. But is it the graph you meant?" and was cut for the reason it was
+# cut from the hero: it is a riddle whose "it" has no antecedent, and it makes a reader work out
+# the stake instead of being told it. A completed cloud job is billed whether or not the graph
+# was the one you meant, and that is the sentence worth putting on the mark.
+TAGLINE = "The wrong graph bills the same."
 
 
 def background() -> Image.Image:
@@ -135,15 +137,22 @@ def draw_graph(im: Image.Image, cx: int, cy: int, scale: float, ss: int = 4) -> 
 
     wire = max(2, int(round(2.3 * unit * S)))
 
-    nw, nh = 21.0, 13.5
-    # A load/encode pair feeding a sampler, which feeds a decoder and a save. The decoder is
-    # the node that links to itself, because node 14 in the recorded incident was the VAEDecode.
+    nw, nh = 26.0, 14.5
+    # A VERTICAL spine, and the orientation is a measured decision rather than a taste one.
+    # armature's figure is portrait - 344 wide by 427 tall - which is how it fills 79% of the
+    # canvas height. The first layout here fanned left-to-right and was landscape, so it could
+    # only ever fill ~59% before its right edge collided with the text column at x=648. A wide
+    # subject in this form floats no matter how it is scaled; a tall one does not.
+    #
+    # Load and encode feed a sampler, which feeds the decoder, which feeds the save. The DECODER
+    # is the node that links to itself, because node 14 in the recorded incident was the
+    # VAEDecode.
     nodes = {
-        "in":   (15, 21),
-        "in2":  (15, 63),
-        "mid":  (47, 42),
-        "self": (80, 27),
-        "out":  (80, 72),
+        "in":   (28, 8),
+        "in2":  (72, 8),
+        "mid":  (50, 34),
+        "self": (50, 62),
+        "out":  (50, 90),
     }
 
     def rect(c):
@@ -166,11 +175,11 @@ def draw_graph(im: Image.Image, cx: int, cy: int, scale: float, ss: int = 4) -> 
         d.line([P(p) for p in pts], fill=base, width=wire, joint="curve")
 
     def link(a, b):
-        """Right port of `a` to left port of `b`, with horizontal control handles."""
-        ax, ay = nodes[a][0] + nw / 2, nodes[a][1]
-        bx, by = nodes[b][0] - nw / 2, nodes[b][1]
-        dx = max(9.0, (bx - ax) * 0.55)
-        return bez((ax, ay), (ax + dx, ay), (bx - dx, by), (bx, by))
+        """Bottom port of `a` to top port of `b`, with vertical control handles."""
+        ax, ay = nodes[a][0], nodes[a][1] + nh / 2
+        bx, by = nodes[b][0], nodes[b][1] - nh / 2
+        dy = max(7.0, (by - ay) * 0.55)
+        return bez((ax, ay), (ax, ay + dy), (bx, by - dy), (bx, by))
 
     # ---- the ordinary links, drawn first so nodes sit over them ---------------------------
     stroke(link("in", "mid"), shade(0.34))
@@ -184,22 +193,37 @@ def draw_graph(im: Image.Image, cx: int, cy: int, scale: float, ss: int = 4) -> 
     # product exists for: `VAEDecode.samples = ["14", 0]`, which a provider's dry_run returned
     # `status: validated` on.
     sx, sy = nodes["self"]
-    right = (sx + nw / 2, sy)
-    left = (sx - nw / 2, sy)
-    # Tight against the node on purpose. An earlier pass arced 20 units clear of it and read
-    # as a speech balloon rather than a wire returning to its own port — the loop has to look
-    # like it belongs to the node, not like it is pointing at it.
-    top = sy - nh / 2 - 12.5
-    loop = bez(right, (right[0] + 11.0, right[1] - 7.0), (right[0] + 3.0, top), (sx + 1.0, top))
-    loop += bez((sx + 1.0, top), (sx - 11.0, top), (left[0] - 10.0, left[1] - 8.0), left)
+    # A near-closed CIRCLE tangent to the node's right edge — standard graph notation for a
+    # self-edge, and the third attempt at this shape. A wide arc over the top read as a speech
+    # balloon; a short two-control bezier off the right edge collapsed into a cramped stub that
+    # looked like a drawing defect rather than a loop. A circle reads as "returns to itself" at
+    # any size, which matters because this is the one element carrying the mark's meaning.
+    r = 14.0
+    ccx, ccy = sx + nw / 2 + r * 0.72, sy
+    # Sweep the LONG way round: 150 degrees down through 0 to -150, which is 300 degrees of arc
+    # and leaves a clean opening where the loop meets the node. Getting this wrong is easy and
+    # silent — an earlier version interpolated start -> end the SHORT way and drew a 34-degree
+    # stub that rendered as a scribble beside the node rather than as a loop.
+    start, sweep = math.radians(150), math.radians(-300)
+    steps = 40
+    loop = [
+        (ccx + r * math.cos(start + sweep * i / steps),
+         ccy + r * math.sin(start + sweep * i / steps))
+        for i in range(steps + 1)
+    ]
     stroke(loop, COPPER_LIT)
 
-    # the arrowhead, landing on the node it left — pointing INTO the left port
-    tipx, tipy = left
-    d.line([P((tipx - 4.6, tipy - 3.6)), P((tipx, tipy))], fill=COPPER_LIT, width=wire,
-           joint="curve")
-    d.line([P((tipx - 5.6, tipy + 2.2)), P((tipx, tipy))], fill=COPPER_LIT, width=wire,
-           joint="curve")
+    # The arrowhead, landing back on the node it left. Its direction is taken from the path's
+    # own final tangent rather than hard-coded, so it stays correct if the arc is ever retuned.
+    (px_, py_), (tipx, tipy) = loop[-2], loop[-1]
+    vx, vy = tipx - px_, tipy - py_
+    n = math.hypot(vx, vy) or 1.0
+    vx, vy = vx / n, vy / n
+    head = 7.0
+    for a in (math.radians(140), math.radians(-140)):
+        bx = tipx + head * (vx * math.cos(a) - vy * math.sin(a))
+        by = tipy + head * (vx * math.sin(a) + vy * math.cos(a))
+        d.line([P((bx, by)), P((tipx, tipy))], fill=COPPER_LIT, width=wire, joint="curve")
 
     # ---- nodes ---------------------------------------------------------------------------
     for name, c in nodes.items():
@@ -208,14 +232,22 @@ def draw_graph(im: Image.Image, cx: int, cy: int, scale: float, ss: int = 4) -> 
         d.rounded_rectangle(
             [P((x0, y0)), P((x1, y1))], radius=3.4 * unit * S, outline=shade(t), width=wire
         )
-        for px_ in (x0, x1):
+        for py_ in (y0, y1):
             d.ellipse(
-                [P((px_ - 1.7, c[1] - 1.7)), P((px_ + 1.7, c[1] + 1.7))],
+                [P((c[0] - 1.7, py_ - 1.7)), P((c[0] + 1.7, py_ + 1.7))],
                 fill=shade(max(0.0, t - 0.10)),
             )
 
     canvas = canvas.resize((box, box), Image.LANCZOS)
-    im.paste(canvas, (cx - box // 2, cy - box // 2), canvas)
+
+    # Crop to the DRAWN content and paste that centred, rather than centring the drawing box.
+    # The box is not the picture: the self-loop and the port pips push the ink off-centre inside
+    # it, which is how two earlier passes ended up 22px and then 42px above the canvas centre
+    # while every constant in the file looked correct. Measuring removes the guess permanently.
+    bbox = canvas.getbbox()
+    if bbox:
+        content = canvas.crop(bbox)
+        im.paste(content, (cx - content.width // 2, cy - content.height // 2), content)
 
 
 def build_wordmark() -> Image.Image:
@@ -223,7 +255,11 @@ def build_wordmark() -> Image.Image:
     draw = ImageDraw.Draw(im)
 
     # The subject sits where armature's figure does: centred near x=400 in the left third.
-    draw_graph(im, cx=392, cy=266, scale=0.95)
+    # Measured against the reference rather than eyeballed. armature's content fills 79.1% of
+    # the canvas height with margins of 55/57 and a vertical centre of 268.5 against a canvas
+    # centre of 270. An earlier pass here filled 59.3% with margins of 88/131 and sat 22px high,
+    # which is what "floating in the canvas" looks like as a number.
+    draw_graph(im, cx=395, cy=270, scale=1.06)
 
     # ---- the name: flat, tracked out, no bevel and no shadow -----------------------------
     size, tracking = 96, 6.0

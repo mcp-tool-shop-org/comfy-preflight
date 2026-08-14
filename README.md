@@ -4,8 +4,6 @@
 
 <p align="center">
   <a href="https://github.com/mcp-tool-shop-org/comfy-preflight/actions/workflows/ci.yml"><img src="https://github.com/mcp-tool-shop-org/comfy-preflight/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://www.npmjs.com/package/@mcptoolshop/comfy-preflight"><img src="https://img.shields.io/npm/v/@mcptoolshop/comfy-preflight?color=cb3837&label=npm" alt="npm"></a>
-  <a href="https://pypi.org/project/comfy-preflight/"><img src="https://img.shields.io/pypi/v/comfy-preflight?color=3775a9&label=pypi" alt="PyPI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License"></a>
   <a href="https://mcp-tool-shop-org.github.io/comfy-preflight/"><img src="https://img.shields.io/badge/landing%20page-live-2ea043" alt="Landing page"></a>
 </p>
