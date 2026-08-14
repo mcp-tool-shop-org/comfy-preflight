@@ -24,7 +24,13 @@ MANIFEST = TESTS / "fixtures" / "MANIFEST.json"
 # A drive-letter absolute path: a letter, a colon, a separator. Note this pattern does not
 # match its own source text (the character before the colon here is ']', not a letter), so the
 # scanner does not flag itself and needs no self-exemption.
-ABSOLUTE_PATH = re.compile(r"[A-Za-z]:[\\/]")
+#
+# The lookbehind is load-bearing and was earned: without it the pattern matches every URL
+# scheme, because `https://` ends in `s:/` and `s` is a letter. A drive letter is exactly ONE
+# letter, so requiring that no letter precedes it separates `E:\AI\training` from
+# `https://huggingface.co/...`. The first test file to cite a source URL made the guard fail on
+# a citation, which is the opposite of what it exists to catch.
+ABSOLUTE_PATH = re.compile(r"(?<![A-Za-z])[A-Za-z]:[\\/]")
 
 
 def _string_constants(path: pathlib.Path) -> list[tuple[int, str]]:
@@ -62,6 +68,25 @@ def test_the_scan_fires_on_an_absolute_path(tmp_path):
     hits = [v for _, v in _string_constants(bad) if ABSOLUTE_PATH.search(v)]
     if not hits:
         raise RuntimeError("the scan missed a synthetic absolute path")
+
+
+def test_the_scan_does_not_fire_on_a_url(tmp_path):
+    """The other direction, and the reason the pattern grew a lookbehind.
+
+    A cited source URL is the opposite of a leaked local path — check 8's envelope table exists
+    to carry them — and a guard that rejected citations would push a later seat to drop the
+    citation rather than the guard.
+    """
+    ok = tmp_path / "zz_synthetic_urls.py"
+    ok.write_text(
+        'CARD = "https://huggingface.co/InstantX/Qwen-Image-ControlNet-Union"\n'
+        'PLAIN = "http://example.invalid/card"\n'
+        'ALSO = "file:///not/a/drive/letter"\n',
+        encoding="utf-8",
+    )
+    hits = [v for _, v in _string_constants(ok) if ABSOLUTE_PATH.search(v)]
+    if hits:
+        raise RuntimeError(f"the scan fired on a URL, which is not an absolute path: {hits}")
 
 
 def test_manifest_matches_the_fixtures_on_disk():

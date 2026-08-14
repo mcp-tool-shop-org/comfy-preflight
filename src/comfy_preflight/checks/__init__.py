@@ -9,7 +9,13 @@ profile; 6 is transport-side. Their results carry the same three accounting fiel
 plus whatever else that check measured.
 """
 
-from comfy_preflight.checks import c1_link_topology, c2_register, c4_saved_is_submitted, c5_frame
+from comfy_preflight.checks import (
+    c1_link_topology,
+    c2_register,
+    c4_saved_is_submitted,
+    c5_frame,
+    c8_envelope,
+)
 from comfy_preflight.checks.c1_link_topology import NodeSchema, check_link_topology
 from comfy_preflight.checks.c2_register import check_register_scan
 from comfy_preflight.checks.c4_saved_is_submitted import check_saved_is_submitted
@@ -19,6 +25,7 @@ from comfy_preflight.checks.c5_frame import (
     FrameConstraint,
     check_generator_legal_frame,
 )
+from comfy_preflight.checks.c8_envelope import check_declared_envelope
 
 __all__ = [
     "NodeSchema",
@@ -29,8 +36,10 @@ __all__ = [
     "check_register_scan",
     "check_saved_is_submitted",
     "check_generator_legal_frame",
+    "check_declared_envelope",
     "c1_link_topology",
     "c2_register",
     "c4_saved_is_submitted",
     "c5_frame",
+    "c8_envelope",
 ]
