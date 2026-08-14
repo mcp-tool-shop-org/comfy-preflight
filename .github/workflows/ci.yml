@@ -62,14 +62,31 @@ jobs:
       # uvicorn, pydantic). A zero-dependency package is not the same as an unaudited one: the
       # extras are what a user installing [mcp] actually gets.
       #
-      # `--skip-editable` is load-bearing, not noise-suppression. Without it `--strict` fails
-      # with "comfy-preflight: Dependency not found on PyPI and could not be audited" — the
-      # editable install of the project itself is not on PyPI, which is a chicken-and-egg that
-      # would fail forever on an unpublished package and keep failing for no useful reason after
-      # publication. The subject of this audit is the dependency tree, not the package under
-      # test. `--strict` stays, so any OTHER dependency that cannot be audited is still an error.
-      - name: pip-audit
+      # This audits the DECLARED dependency surface from pyproject, not an installed environment,
+      # and the difference was earned by two red runs:
+      #
+      #   1. `pip-audit --strict` on the installed env failed with "comfy-preflight: Dependency
+      #      not found on PyPI and could not be audited" — the project itself is not on PyPI.
+      #   2. Adding `--skip-editable` then failed with "distribution marked as editable", because
+      #      `--strict` treats ANY skipped distribution as an error. The two flags are mutually
+      #      exclusive by design, so the second fix could never have worked.
+      #
+      # Auditing the requirements directly removes the project from the question entirely, keeps
+      # `--strict` at full force for every real dependency, and audits what a user is actually
+      # promised rather than what one CI runner happened to resolve. The list is derived from
+      # pyproject, so it cannot drift from the declarations.
+      - name: pip-audit (declared dependencies + every extra)
         run: |
           python -m pip install --upgrade pip pip-audit
-          python -m pip install -e ".[dev]"
-          pip-audit --strict --skip-editable --progress-spinner off
+          python - > /tmp/declared-requirements.txt <<'PY'
+          import pathlib, tomllib
+          project = tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]
+          seen = []
+          for spec in project.get("dependencies", []):
+              seen.append(spec)
+          for group in project.get("optional-dependencies", {}).values():
+              seen.extend(group)
+          print("\n".join(dict.fromkeys(seen)))
+          PY
+          echo "--- auditing ---"; cat /tmp/declared-requirements.txt
+          pip-audit --strict -r /tmp/declared-requirements.txt --progress-spinner off
