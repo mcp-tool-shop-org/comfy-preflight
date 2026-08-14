@@ -8,7 +8,7 @@ import pytest
 
 import comfy_preflight
 from comfy_preflight._assert_probe import asserts_are_stripped, bare_assert_fires
-from comfy_preflight.errors import Defect, PreflightHalt, Verdict
+from comfy_preflight.errors import Defect, PreflightHalt, Verdict, merge_verdicts
 
 
 def test_version_matches_pyproject():
@@ -26,6 +26,74 @@ def test_verdict_distinguishes_not_applicable_from_pass():
     """
     assert Verdict.NOT_APPLICABLE is not Verdict.PASS
     assert Verdict.NOT_APPLICABLE.value == "not_applicable"
+
+
+def test_advisory_is_distinct_from_pass_and_from_halt():
+    """ADVISORY is a third thing, not a soft HALT and not a decorated PASS.
+
+    Check 8 exists in this state: a documented band is documentation, not a gate, and the
+    studio ran an out-of-band value deliberately. Collapsing it into HALT would fire on
+    correct work; collapsing it into PASS would hide the fact it was added to surface.
+    """
+    assert Verdict.ADVISORY is not Verdict.PASS
+    assert Verdict.ADVISORY is not Verdict.HALT
+    assert Verdict.ADVISORY.value == "advisory"
+
+
+def test_the_merge_order_is_the_ratified_one():
+    """HALT > ADVISORY > NOT_APPLICABLE > PASS, each rung pinned against the one below it."""
+    assert merge_verdicts([Verdict.PASS, Verdict.NOT_APPLICABLE]) is Verdict.NOT_APPLICABLE
+    assert merge_verdicts([Verdict.NOT_APPLICABLE, Verdict.ADVISORY]) is Verdict.ADVISORY
+    assert merge_verdicts([Verdict.ADVISORY, Verdict.HALT]) is Verdict.HALT
+    # and the full set reduces to the top rung regardless of the order it arrives in
+    every = [Verdict.PASS, Verdict.HALT, Verdict.NOT_APPLICABLE, Verdict.ADVISORY]
+    assert merge_verdicts(every) is Verdict.HALT
+    assert merge_verdicts(list(reversed(every))) is Verdict.HALT
+
+
+def test_not_applicable_outranks_pass_which_is_the_surprising_rung():
+    """A declined clause must not disappear behind passing ones.
+
+    This is the rung a reader would most likely "fix" to PASS, so it is pinned with its
+    reason: a run where something declined has not checked everything.
+    """
+    assert merge_verdicts([Verdict.PASS, Verdict.PASS, Verdict.NOT_APPLICABLE]) is (
+        Verdict.NOT_APPLICABLE
+    )
+
+
+def test_merging_nothing_is_not_a_pass():
+    """Running no checks at all is the cheapest possible way to build a gate that cannot fail."""
+    assert merge_verdicts([]) is Verdict.NOT_APPLICABLE
+
+
+def test_halt_carries_no_report_when_a_single_check_raises():
+    """A lone check has no aggregate to carry, and says so with None rather than an empty shape."""
+    exc = PreflightHalt("check_1_link_topology", [Defect(code="A", message="m", hint="h")])
+    assert exc.report is None
+
+
+def test_halt_can_carry_the_aggregate_report():
+    """The halt is the ONLY way out of a failed aggregate run, so it must carry the report.
+
+    A second non-raising entry point for the CLI and MCP to call would be a skip flag under
+    another name. Instead the renderers catch this and read `report`.
+    """
+    sentinel = object()
+    exc = PreflightHalt(
+        "preflight", [Defect(code="A", message="m", hint="h")], report=sentinel
+    )
+    assert exc.report is sentinel
+
+
+def test_the_report_carrier_is_keyword_only_and_not_skip_shaped():
+    """`report` must not be positionally confusable with `defects`, and must not gate anything."""
+    import inspect
+
+    params = inspect.signature(PreflightHalt.__init__).parameters
+    assert params["report"].kind is inspect.Parameter.KEYWORD_ONLY
+    forbidden = {"skip", "force", "ignore", "warn_only", "soft", "strict", "enabled"}
+    assert not (set(params) & forbidden)
 
 
 def test_defect_locates_itself():

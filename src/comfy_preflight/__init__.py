@@ -12,6 +12,6 @@ build-state table for which checks exist. That table is the honest state of this
 
 __version__ = "1.0.0"
 
-from comfy_preflight.errors import PreflightHalt, Verdict
+from comfy_preflight.errors import PreflightHalt, Verdict, merge_verdicts
 
-__all__ = ["__version__", "PreflightHalt", "Verdict"]
+__all__ = ["__version__", "PreflightHalt", "Verdict", "merge_verdicts"]
