@@ -6,12 +6,22 @@ none." This package is a compensator you run *before* instead of after.
 
 It does not submit, does not repair a graph, and never sees an output.
 
-Nothing is exported here yet beyond the version and the error surface — see the README's
-build-state table for which checks exist. That table is the honest state of this repo.
+`preflight()` is the function the adoption contract names: call it **in-process on the submit
+path**, and let it raise. See the README's build-state table for which checks it composes; that
+table is the honest state of this repo.
 """
 
 __version__ = "1.0.0"
 
-from comfy_preflight.errors import PreflightHalt, Verdict, merge_verdicts
+from comfy_preflight.aggregate import PreflightResult, preflight
+from comfy_preflight.errors import Defect, PreflightHalt, Verdict, merge_verdicts
 
-__all__ = ["__version__", "PreflightHalt", "Verdict", "merge_verdicts"]
+__all__ = [
+    "__version__",
+    "preflight",
+    "PreflightResult",
+    "Defect",
+    "PreflightHalt",
+    "Verdict",
+    "merge_verdicts",
+]
