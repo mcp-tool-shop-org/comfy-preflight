@@ -8,16 +8,16 @@ Nothing was submitted. No credit was spent. The generation budget the arc sancti
 unspent** — see §3. `E:\AI\facet` was read for the spec and was not modified. No tag, no
 publish, no release: those are §7, and they wait on the handback.
 
-> ## ⛔ THIS IS THE TASK-4 HALT
+> ## ✅ RELEASED — v1.0.0 is live on both registries
 >
-> README, handbook, landing page and every other public surface are **FINAL**. The one
-> remaining ship-gate line is translations, which are the advisor's to run:
+> The task-4 halt was cleared by the Director's word ("run the translations"), and §7's release
+> order executed. **PyPI `comfy-preflight` 1.0.0** and **npm `@mcptoolshop/comfy-preflight`
+> 1.0.0**, both by OIDC trusted publishing with no token on this repo, plus a GitHub Release
+> carrying both binaries, their checksums, the wheel and the sdist.
 >
-> ```
-> node E:/AI/polyglot-mcp/scripts/translate-all.mjs E:/AI/comfy-preflight/README.md --cache-clear
-> ```
->
-> This seat resumes on the advisor's word and executes §7's release order.
+> Verified by installing each published artifact and running a **verb** from outside any
+> checkout — never `--help` — and reading PyPI's **simple index** rather than the cached
+> aggregate. See §10.
 
 ---
 
@@ -293,14 +293,71 @@ The release order, which is law:
 | UNCERTAINTY_GATED_HUMANS | 3 | the headline was routed to the Director as a taste call with four real directions rather than decided unilaterally after his feedback; §5c and §5d are reported against their owners rather than worked around; the measured entry kind ships empty pending a ruling; the contrastive frame is stated throughout — *you probably expected a generation spend; I drew it, because this form's own record says generation lost* |
 | EXTERNAL_VERIFIER | 2 | the brand form was verified by measuring the reference asset rather than eyeballing it; the favicon was verified by rendering at true size and looking, which is the only thing that caught the hamburger; the live site was verified by fetching the deployed HTML, not by trusting the build; CI was verified by reading the failing logs; `verify.py` verifies the wheel from outside the checkout, where the packaging defects actually live. **Marked down from 3 because of §5d**: the brand asset was measured against the reference to BUILD it and never re-measured to CHECK it, so two defects reached a public surface and a person caught them. The instrument existed and was not pointed at my own output. Remediation: the logo script now reports its own bbox/margins/centre against the reference constants, and any future asset change re-runs that comparison before it is pushed |
 
-## 10. State
+## 10. The release, and the three things that had to be fixed to get it out
+
+**Shipped 2026-08-14.** Tag `v1.0.0`. PyPI `comfy-preflight` 1.0.0 (wheel + sdist). npm
+`@mcptoolshop/comfy-preflight` 1.0.0 — `_npmUser` is `GitHub Actions` with a `trustedPublisher`
+block and a SLSA provenance attestation, which is the proof it went by OIDC and not a token.
+GitHub Release carries both binaries (linux-x64 34.6 MB, win-x64 20.8 MB), `checksums-1.0.0.txt`,
+the wheel and the sdist.
+
+**Verified as the dispatch requires** — the published artifact, a real verb, from outside any
+checkout:
+
+| door | result |
+|---|---|
+| PyPI simple index | `comfy_preflight-1.0.0-py3-none-any.whl` + `.tar.gz` (not the cached JSON aggregate) |
+| `pip install` → `check graph.json --json` | exit 0, `checks_run [1,2,4,5,8]`, check 8 surfaces the 0.92 it cannot judge |
+| `pip` → `check --input-dims 1066x1024` | **exit 1** — the recorded frame still halts from the wheel |
+| `pip` → `mcp` with the extra absent | declines with the install hint, exit 0, no crash |
+| `npx @mcptoolshop/comfy-preflight@1.0.0` | fetches checksums, downloads the binary, **verifies SHA256**, then runs — `checks_run [1,2,4,5,8]` |
+| `npx` → `--input-dims 1066x1024` | **exit 1** through the launcher and the frozen binary |
+| `npx` → `mcp` | reaches the stdio server with no Python on the machine |
+
+### The three fixes, and none of them was a code defect in the product
+
+**a. PyInstaller aborted on `--collect-submodules mcp`.** The SDK's `mcp.cli` imports typer and
+calls `sys.exit(1)` at import time when typer is absent; `collect_submodules` walks a package by
+*importing* every submodule, so that exit ran inside PyInstaller's isolated analysis child.
+`--exclude-module mcp.cli` was already present and could not help — exclusion governs what gets
+bundled, **after** collection has already imported. Narrowing the collection root to
+`mcp.server` is the fix. This one was mine: facet's workflow documents the trap and I walked
+into it by adding a flag facet does not use. Fixed and then **verified locally** — built the
+binary, ran the verb, confirmed the 1066 halt — rather than by spending another release run.
+
+**b. npm returned `E404` on the registry PUT.** Not a defect: npm masks a missing trusted
+publisher as a 404 rather than an auth error, which facet's workflow and the placeholder
+playbook both warn about in as many words. The Director bound the publisher; the same tag then
+published.
+
+**c. A half-published release had no way to finish.** v1.0.0 reached PyPI and failed at npm,
+and a dispatch from `main` would have set the ref to `main`, failed the version gate, and left a
+version bump as the only path — npm's first version at 1.0.1 against PyPI's 1.0.0, permanently
+out of step for a reason no user could infer. `workflow_dispatch` now takes a `tag`, both jobs
+resolve one `RELEASE_TAG` and **check out that tag**, so a dispatched re-run is byte-identical to
+the original push. Two idempotency fixes let it actually reach the failed step: `skip-existing`
+on PyPI (the published 1.0.0 is a no-op, not an abort) and the Release step uploading into an
+existing release with `--clobber`. Both were found by re-reading the failed run's step order and
+asking what a *second* execution does differently — not by assuming a re-run just works.
+
+**The npm placeholder** was prepared at `E:/AI/comfy-preflight-placeholder` (outside the repo,
+per the playbook, so the real package's `files` field cannot leak into it) and published by the
+Director, who then configured the trusted publisher. Worth recording against the playbook: its
+primary path says an `E404` on a brand-new name means *configure TP and re-run, do NOT reach for
+the placeholder* — the placeholder route still worked, and the name now carries both `0.0.0` and
+`1.0.0`.
+
+## 11. State
 
 - **Built and green:** checks 1, 2, 4, 5, 8; the aggregator over a registry; CLI; MCP stdio;
   246 tests in three interpreter modes; `verify.py` end to end; CI green.
 - **Shipped surfaces:** logo + favicons in the brand repo, landing page, five-page handbook,
   GitHub metadata, repo-knowledge entry.
-- **Ready and not fired:** `release.yml`, the npm launcher, the version gate. PyPI trusted
-  publisher confirmed; npm's unverified from this seat.
-- **Blocked on the advisor:** translations (§7 step 1), then the release order.
+- **Released:** v1.0.0 on PyPI and npm, both by OIDC with no token on the repo; GitHub Release
+  with binaries, checksums, wheel and sdist. Both doors verified by running a verb from outside
+  a checkout.
+- **Translations:** 7 languages on TranslateGemma 27B, swept — heading parity 13/13, fence
+  parity 8/8, 7-link nav bars with no dead targets. One real defect caught and fixed: "Comfy
+  Cloud" rendered as an adjective in es/it/hi.
 - **Open for the advisor:** §5c (playbook's stale pagefind path), §5e (shipcheck's detector),
   and whether a `STUDIO_MEASURED` entry gets ruled in from E35's sweep.
