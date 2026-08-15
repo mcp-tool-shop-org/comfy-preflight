@@ -651,11 +651,135 @@ QWEN_CONTROLNET_UNION_DENOISE = EnvelopeEntry(
 )
 
 
+# ---------------------------------------------------------------------------------------------
+# THE SECOND STUDIO-MEASURED ENTRY, RULED IN BY E35 RULING 11 (advisor, 2026-08-15).
+#
+# One ruling per entry, always. This is that entry's own ruling, and it is a different checkpoint
+# from the first — Amendment 2's "exactly one checkpoint" bound day one, and 1.0.0 has shipped.
+#
+# CHECKPOINT NAME. The ruling names the checkpoint `qwen-image-edit-2509`. The table is looked up
+# by what a GRAPH carries, so the entry is keyed on the filename the recorded 2509 payloads load
+# through `UNETLoader.unet_name`: `qwen_image_edit_2509_fp8_e4m3fn.safetensors`, read from
+# facet_E35/payloads/payload_p2509_v1.json rather than assumed from the shorthand.
+#
+# ⚠ WHAT NO CHECK CAN SEE, STATED HERE RATHER THAN DISCOVERED LATER. Every shape this schema
+# offers — Band, MeasuredLadder, DocumentedAbsence — resolves against a GRAPH INPUT read by
+# node class. This measurement's operand is the unique-colour count of the referenced image
+# FILE, which no ComfyUI node carries as an input and which this package cannot compute: it
+# does not decode images (check 5's standing boundary — "dimensions in, verdict out - so it
+# grows no image dependency to satisfy a check"). So check 8 DECLINES on this ladder, by
+# construction and on every graph, with the message it already has for the case: the rungs were
+# reported against nothing rather than against a guess. That is the honest report, and the entry
+# still ships, because the table is documentation before it is a lookup.
+#
+# The shape is a ladder because it is the only legal one: `documented_absent` is a claim about a
+# publisher's card and is VENDOR-only, and a `Band` would have to state a threshold between the
+# corrupt and clean readings — a bound the measurement did not establish and the ruling forbids
+# inventing.
+#
+# The named future shape, if a seat is ever ruled to build it, is check 5's: an injected
+# `input_unique_colours` parameter on the submit path where the image is in hand, degrading to
+# NOT_APPLICABLE in the standalone CLI. That is a check, and no ruling has commissioned it.
+# ---------------------------------------------------------------------------------------------
+
+QWEN_IMAGE_EDIT_2509_QUANTISATION = EnvelopeEntry(
+    checkpoint="qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+    kind=EntryKind.STUDIO_MEASURED,
+    record=MeasuredRecord(
+        experiment="E35",
+        locator=(
+            "docs/experiments/E35-D1-report.md and docs/experiments/E35-E-report.md, "
+            "sections D1/E1/E2; ruled in at docs/experiments/E35-ruling.md, Rulings 9 and 11"
+        ),
+        measured="2026-08-15",
+        finding=(
+            "The trigger is the input image's quantisation character. A native Workbench render "
+            "carrying 2,620 unique colours corrupts the edit encode DETERMINISTICALLY - a "
+            "verbatim re-submission returned pixel-identical corruption, 0 differing pixels of "
+            "1,053,696 - while inputs carrying ~5,000 colours are clean. One lanczos round-trip "
+            "at native framing repairs it. A trigger, not a mechanism: why quantisation "
+            "degenerates the latent is not established."
+        ),
+    ),
+    ladders=(
+        MeasuredLadder(
+            parameter="input image unique colour count",
+            # Where the input image ENTERS the graph. Named so the decline says what it looked
+            # for; no LoadImage carries this as an input, and none ever will - see the block
+            # above. The class list is not a guess about where the value hides, it is the
+            # location of the operand the check cannot read.
+            node_classes=frozenset({"LoadImage"}),
+            context=(
+                "qwen-image-edit-2509 at 672x1568, edit route, input arriving through LoadImage. "
+                "THIS IS A PROPERTY OF THE REFERENCED IMAGE FILE, NOT A GRAPH LITERAL: no node "
+                "carries it as an input, this package does not decode images, and check 8 "
+                "therefore declines on every graph rather than guessing. The rungs hold for "
+                "flat-shaded Workbench renders entering this checkpoint's encode and nowhere "
+                "else - a photographic input is not the off-distribution case these measured"
+            ),
+            rungs=(
+                Rung(
+                    value=2620,
+                    outcome=(
+                        "the native Workbench render - edit encode CORRUPT, at A3a/A3b/A3c and "
+                        "D1, four times"
+                    ),
+                    ruling=(
+                        "deterministic, not a platform lottery: D1 re-submitted verbatim and "
+                        "came back pixel-identical to A3c, 0 differing of 1,053,696, while the "
+                        "two files' sha256 differ"
+                    ),
+                ),
+                Rung(
+                    value=5046,
+                    outcome=(
+                        "E1, the recorded 352 clay resized locally with the node no-oping - "
+                        "clean. Killed traversal: content-equivalent pixels arriving as a file "
+                        "the node no-ops on came back clean, so it is the pixels and not the "
+                        "node's processing"
+                    ),
+                ),
+                Rung(
+                    value=5336,
+                    outcome=(
+                        "E2, the native render lanczos round-tripped with the node no-oping - "
+                        "clean. Killed framing: native framing unchanged, only the interpolation "
+                        "character altered"
+                    ),
+                    ruling="the repair the finding names - one lanczos round-trip at native framing",
+                ),
+            ),
+        ),
+    ),
+    notes=(
+        "THE RULING NAMES TWO MEASURED POINTS - corrupt at 2,620 and clean at ~5,000. Three "
+        "rungs ship because the record holds three readings (E1 5,046 and E2 5,336 are separate "
+        "measurements of the clean class), and transcribing them is closer to the record than "
+        "collapsing two readings into one '~5,000' nobody measured. No rung is interpolated and "
+        "no threshold between 2,620 and 5,046 is stated: where the boundary lies was not "
+        "measured, and this table does not invent one.",
+        "EXONERATED, each by its own measurement, so a later reader does not re-run them: "
+        "framing (E2, native framing unchanged, clean), traversal (E1, node no-op, clean), "
+        "alpha (D1's fourth channel changed nothing anywhere - the hypothesis died by its own "
+        "falsifier), bit depth and colour type (both inputs measured 8-bit RGBA all-opaque, "
+        "killed free before the spend), seed and the turbo switch (the three distinct A3 "
+        "signatures were three distinct CONFIGS, not a nondeterministic fault).",
+        "SCOPE: submission-input knowledge for this checkpoint. E35's class comparisons - how "
+        "2509 scores against the recorded route on the pale and dark classes - stay in facet's "
+        "record and are deliberately NOT carried here. They are a comparison between routes, "
+        "not an operating envelope for this one.",
+    ),
+)
+
+
 # The vendor-cited entries and the ruled-in measurements, declared separately so a reader can see
 # at a glance what each authority contributed, and indexed together into the one table check 8
 # reads. One ruling per entry, always: a second measurement enters here only through its own.
 VENDOR_ENTRIES: tuple[EnvelopeEntry, ...] = (QWEN_CONTROLNET_UNION,)
-STUDIO_MEASURED: tuple[EnvelopeEntry, ...] = (QWEN_CONTROLNET_UNION_DENOISE,)
+STUDIO_MEASURED: tuple[EnvelopeEntry, ...] = (
+    QWEN_CONTROLNET_UNION_DENOISE,
+    QWEN_IMAGE_EDIT_2509_QUANTISATION,
+)
 
 ENVELOPE: dict[EnvelopeKey, tuple[EnvelopeEntry, ...]] = index(
     *VENDOR_ENTRIES, *STUDIO_MEASURED

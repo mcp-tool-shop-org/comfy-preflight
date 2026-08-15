@@ -43,6 +43,11 @@ INPAINTING_GRAPH = ADAPTER_17
 
 UNION = "Qwen-Image-InstantX-ControlNet-Union.safetensors"
 INPAINTING = "Qwen-Image-InstantX-ControlNet-Inpainting.safetensors"
+# The second ruled-in checkpoint (E35 Ruling 11). It is loaded through UNETLoader.unet_name,
+# not ControlNetLoader, and NO recorded fixture carries it — all 70 load qwen_image_fp8. So its
+# entry is inert against the corpus by construction, and the tests below build the graph that
+# reaches it rather than borrowing one.
+EDIT_2509 = "qwen_image_edit_2509_fp8_e4m3fn.safetensors"
 ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
@@ -551,15 +556,23 @@ def test_a_measured_entry_works_end_to_end_through_the_check():
     assert "hardened interior speckle" in finding.message
 
 
-def test_the_table_covers_one_checkpoint_and_is_keyed_by_checkpoint_and_parameter():
-    """Amendment 2 rules exactly one checkpoint; Amendment 5 puts two authorities on it.
+def test_the_table_is_keyed_by_checkpoint_and_parameter_across_both_checkpoints():
+    """The key is the PAIR, and that is the shape change Amendment 5's ruling forced.
 
-    The key is the PAIR, and that is the shape change the ruling forced. Keyed by checkpoint
-    alone, the studio's denoise measurement and the vendor's declared absence for denoise would
-    have been one slot for two entries, and the second would have overwritten the first in
-    silence.
+    Keyed by checkpoint alone, the studio's denoise measurement and the vendor's declared
+    absence for denoise would have been one slot for two entries, and the second would have
+    overwritten the first in silence.
+
+    ⚑ Amendment 2's "exactly one checkpoint" bound DAY ONE, and 1.0.0 has shipped. E35 Ruling 11
+    rules in a second checkpoint — qwen-image-edit-2509 — so the table now spans two, and this
+    test's old name said "one". Renamed rather than loosened: the assertion is still the full
+    key list, so a third checkpoint arriving without its own ruling still fails here.
     """
-    assert list(ENVELOPE) == [(UNION.lower(), "strength"), (UNION.lower(), "denoise")]
+    assert list(ENVELOPE) == [
+        (UNION.lower(), "strength"),
+        (UNION.lower(), "denoise"),
+        (EDIT_2509.lower(), "input image unique colour count"),
+    ]
     assert [e.kind for e in _entries("strength")] == [EntryKind.VENDOR]
     assert [e.kind for e in _entries("denoise")] == [
         EntryKind.VENDOR,
@@ -658,7 +671,13 @@ def test_the_ruled_in_measurement_is_e35s_denoise_sweep_with_its_four_rungs():
     # One ruling per entry, always. A second measurement enters through its own ruling, not by
     # being appended beside this one — which is what the deleted empty-dict gate was protecting,
     # stated now as a count rather than as a zero.
-    assert len(STUDIO_MEASURED) == 1
+    #
+    # ⚑ MOVED 1 -> 2 deliberately, in the commit that adds the second entry. That is what this
+    # pin is FOR: it never forbade a second measurement, it forbids one arriving without a
+    # ruling and without a seat editing this line on purpose. The second is E35 Ruling 11's
+    # quantisation trigger on qwen-image-edit-2509 — its own ruling, its own checkpoint, and
+    # pinned against its own record below.
+    assert len(STUDIO_MEASURED) == 2
     assert STUDIO_MEASURED[0] is entry
     assert entry.kind is EntryKind.STUDIO_MEASURED
     assert entry.record.experiment == "E35"
@@ -983,3 +1002,134 @@ def _set_controlnet_strength(raw: dict, value) -> None:
     for node in raw.values():
         if node["class_type"] == "ControlNetApplyAdvanced":
             node["inputs"]["strength"] = value
+
+
+# ---------------------------------------------------------------------------------------------
+# The SECOND ruled-in measurement (E35 Ruling 11): the 2509 quantisation trigger, and the
+# boundary that no check reaches it.
+# ---------------------------------------------------------------------------------------------
+
+
+def _quantisation_entry() -> EnvelopeEntry:
+    return ENVELOPE[(EDIT_2509.lower(), "input image unique colour count")][0]
+
+
+def _loading_2509(raw: dict) -> None:
+    """Point every UNETLoader at the 2509 checkpoint.
+
+    All 70 recorded fixtures load `qwen_image_fp8_e4m3fn.safetensors` through this input, so
+    this one edit is what makes a graph the entry can be found by — and it is why the entry is
+    inert against the corpus as it stands.
+    """
+    for node in raw.values():
+        if node["class_type"] == "UNETLoader":
+            node["inputs"]["unet_name"] = EDIT_2509
+
+
+def test_the_second_ruled_in_measurement_is_e35s_quantisation_trigger():
+    """The data, pinned against the record it came from.
+
+    Numbers transcribed from `E35-E-report.md` section 1 and `E35-D1-report.md`, not recalled:
+    the native Workbench render at 2,620 unique colours corrupts; E1 at 5,046 and E2 at 5,336
+    are clean; D1's verbatim re-submission came back pixel-identical to A3c, 0 differing of
+    1,053,696. If a later seat edits a rung, this test is what sends them back to the reports.
+    """
+    entry = _quantisation_entry()
+    assert entry.kind is EntryKind.STUDIO_MEASURED
+    assert entry.checkpoint == EDIT_2509
+    assert entry.record.experiment == "E35"
+    assert entry.record.measured == "2026-08-15"
+    for locator_fragment in ("E35-D1-report.md", "E35-E-report.md", "E35-ruling.md"):
+        assert locator_fragment in entry.record.locator
+    assert "2,620 unique colours" in entry.record.finding
+    assert "DETERMINISTICALLY" in entry.record.finding
+    assert "1,053,696" in entry.record.finding
+    assert "lanczos round-trip" in entry.record.finding
+    # A trigger, not a mechanism — the report says so and the entry must not upgrade it.
+    assert "not a mechanism" in entry.record.finding
+
+    ladder = entry.ladders[0]
+    assert ladder.parameter == "input image unique colour count"
+    assert [rung.value for rung in ladder.ordered] == [2620, 5046, 5336]
+    by_value = {rung.value: rung for rung in ladder.rungs}
+    assert "CORRUPT" in by_value[2620].outcome
+    assert "0 differing of 1,053,696" in by_value[2620].ruling
+    assert "clean" in by_value[5046].outcome and "traversal" in by_value[5046].outcome
+    assert "clean" in by_value[5336].outcome and "framing" in by_value[5336].outcome
+    # The validity envelope, without which the rungs would read as universal.
+    for fragment in ("672x1568", "NOT A GRAPH LITERAL", "Workbench"):
+        assert fragment in ladder.context
+
+
+def test_the_quantisation_entry_invents_no_threshold_between_corrupt_and_clean():
+    """The ruling forbids a bound beyond the measured points, so there must not be one.
+
+    2,620 corrupts and 5,046 is clean. Where between them the boundary lies was never measured,
+    and a `Band` would have had to state it. This pins the absence of that invention: the entry
+    carries rungs and no band, and its notes say plainly that the threshold is unmeasured.
+    """
+    entry = _quantisation_entry()
+    assert entry.bands == ()
+    assert entry.ladders and len(entry.ladders) == 1
+    notes = " ".join(entry.notes)
+    assert "no threshold between 2,620 and 5,046 is stated" in notes
+    # Every exoneration the ruling names, so none is quietly dropped by a later edit.
+    for exonerated in ("framing", "traversal", "alpha", "bit depth", "colour type", "seed",
+                       "turbo switch"):
+        assert exonerated in notes
+
+
+def test_a_graph_loading_2509_gets_the_entry_but_the_check_declines_to_read_the_property():
+    """⚑ THE BOUNDARY, pinned as behaviour rather than left in a comment.
+
+    The entry is FOUND — the checkpoint resolves through `UNETLoader.unet_name` — and then the
+    ladder DECLINES, because its operand is the unique-colour count of the referenced image
+    file and no ComfyUI node carries that as an input. This package does not decode images
+    (check 5's standing boundary), so there is nothing for check 8 to read.
+
+    This is a can-fail leg, not a tautology: if a later seat wires an injection path so the
+    property can be read, or changes the decline into a guess, this test fires and makes them
+    say which. What it must never become is a silent PASS that looks like coverage.
+    """
+    result = check_declared_envelope(mutate(UNION_GRAPH, _loading_2509))
+    assert EDIT_2509 in result.checkpoints_found
+    assert EDIT_2509 in result.checkpoints_covered
+    assert EDIT_2509 not in result.checkpoints_not_in_table
+
+    declined = dict(result.clauses_declined)
+    clause = "envelope_measured.input image unique colour count"
+    assert clause in declined, "the ladder must DECLINE, not silently contribute nothing"
+    assert "has no such node carrying that input" in declined[clause]
+    # The honest half: it says it reported against nothing rather than guessing.
+    assert "reported against nothing rather than against a guess" in declined[clause]
+    assert "studio measurement E35" in declined[clause]
+
+    # Nothing was measured, so nothing is claimed: no finding names this parameter, and the
+    # parameter never appears in the checked list.
+    assert all(
+        f.input_name != "input image unique colour count" for f in result.findings
+    )
+    assert all(
+        name != "input image unique colour count" for _, name, _ in result.parameters_checked
+    )
+
+
+def test_no_recorded_graph_reaches_the_quantisation_entry():
+    """The entry is inert against the corpus, and that is a measured fact rather than a hope.
+
+    All 70 fixtures load `qwen_image_fp8_e4m3fn.safetensors`. If a 2509 graph is ever added to
+    the corpus, this test fires — and the seat that adds it has to decide, deliberately, what a
+    permanently-declining clause should do on every recorded run.
+    """
+    reached = _graphs_loading(EDIT_2509)
+    assert reached == [], f"fixtures now load 2509: {reached}"
+
+
+def test_the_check_still_never_halts_with_the_second_entry_present():
+    """Check 8's founding property, re-proven over the new entry rather than assumed.
+
+    A second checkpoint and a permanently-declining clause are exactly the kind of addition
+    that turns an advisory into a halt by accident.
+    """
+    result = check_declared_envelope(mutate(UNION_GRAPH, _loading_2509))
+    assert result.verdict in (Verdict.PASS, Verdict.ADVISORY)

@@ -60,13 +60,15 @@ rather than letting the later row win in silence.
 
 ## What ships today
 
-One checkpoint — **`Qwen-Image-InstantX-ControlNet-Union`** — with both authorities on it.
+Two checkpoints. **`Qwen-Image-InstantX-ControlNet-Union`** carries both authorities on one
+parameter; **`qwen-image-edit-2509`** carries a second studio measurement under its own ruling.
 
-| parameter | kind | what it says | authority |
-|---|---|---|---|
-| `strength` (the card's `controlnet_conditioning_scale`) | `VENDOR` | band `[0.8, 1.0]` | [the model card](https://huggingface.co/InstantX/Qwen-Image-ControlNet-Union), retrieved 2026-08-14 |
-| `denoise` | `VENDOR` | **declared absence** — the card publishes no range | the same card, read at the same seat |
-| `denoise` | `STUDIO_MEASURED` | four measured rungs, below | experiment E35, `docs/experiments/E35-clean-twins-report.md` § "2b — the denoise sweep", measured 2026-08-14 |
+| checkpoint | parameter | kind | what it says | authority |
+|---|---|---|---|---|
+| Union | `strength` (the card's `controlnet_conditioning_scale`) | `VENDOR` | band `[0.8, 1.0]` | [the model card](https://huggingface.co/InstantX/Qwen-Image-ControlNet-Union), retrieved 2026-08-14 |
+| Union | `denoise` | `VENDOR` | **declared absence** — the card publishes no range | the same card, read at the same seat |
+| Union | `denoise` | `STUDIO_MEASURED` | four measured rungs, below | experiment E35, `docs/experiments/E35-clean-twins-report.md` § "2b — the denoise sweep", measured 2026-08-14 |
+| edit-2509 | input image unique colour count | `STUDIO_MEASURED` | three measured rungs, below | experiment E35, `E35-D1-report.md` + `E35-E-report.md` §§ D1/E1/E2, ruled in at `E35-ruling.md` Rulings 9/11, measured 2026-08-15 |
 
 ### The measured rungs — the register dies before the specks do
 
@@ -93,6 +95,53 @@ as the nearest reading with the fact that it is outside said plainly.
 The consequence is deliberate: **a graph on this checkpoint reaches `ADVISORY`, not `PASS`.**
 ADVISORY exits `0`, so nothing that was proceeding stops proceeding — the caller is simply told,
 before the spend, what happens to the register at the value they are about to run.
+
+## The second measurement — the 2509 quantisation trigger
+
+Ruled in by E35 Ruling 11, on a different checkpoint and under its own ruling. The measured
+quantity is the **unique-colour count of the input image**.
+
+| unique colours | input | result |
+|---|---|---|
+| **2,620** | the native Workbench render | **edit encode CORRUPT** — at A3a/A3b/A3c and D1, four times |
+| 5,046 | the recorded 352 clay, resized locally, node no-ops | clean — **killed traversal** |
+| 5,336 | the native render, lanczos round-tripped, node no-ops | clean — **killed framing** |
+
+**The fault is deterministic, not a platform lottery.** D1 re-submitted verbatim and came back
+**pixel-identical to A3c — 0 differing pixels of 1,053,696** — while the two files' sha256 differ.
+The three distinct earlier signatures came from three distinct *configs*, not from nondeterminism.
+
+**One lanczos round-trip at native framing repairs it.** Framing, traversal, alpha, bit depth,
+colour type, seed and the turbo switch are each exonerated by their own measurement.
+
+**This is a trigger, not a mechanism.** Why quantisation degenerates the latent is not
+established, and the entry does not upgrade it. **No threshold is stated between 2,620 and 5,046**
+— where the boundary lies was never measured, and this table does not invent one.
+
+### ⚠ No check reads this, and the entry ships anyway
+
+Every shape the schema offers resolves against a **graph input**, read by node class. This
+measurement's operand is a property of the referenced **image file**, and no ComfyUI node carries
+it as an input. comfy-preflight also does not decode images — *dimensions in, verdict out*, so it
+grows no image dependency to satisfy a check.
+
+So check 8 **declines** on this ladder, by construction and on every graph:
+
+```
+declined envelope_measured.input image unique colour count:
+  qwen_image_edit_2509_fp8_e4m3fn.safetensors carries a studio measurement of
+  'input image unique colour count' on ['LoadImage'], but the graph has no such node
+  carrying that input. The rungs were reported against nothing rather than against a
+  guess. Source: studio measurement E35 [...]
+```
+
+That is the honest report, and the entry still ships, **because the table is documentation before
+it is a lookup**. The measurement is knowable at submit time and now written down where a reader
+of this checkpoint's envelope will find it.
+
+The named future shape, if a seat is ever ruled to build it, is check 5's: an injected
+`input_unique_colours` parameter on the submit path where the image is in hand, degrading to
+NOT_APPLICABLE in the standalone CLI. **That is a check, and no ruling has commissioned it.**
 
 ## ⚠ The band that is not on the card
 

@@ -7,6 +7,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this pr
 ## [Unreleased]
 
 ### Added
+- **The second `STUDIO_MEASURED` envelope entry — E35's quantisation trigger on
+  `qwen-image-edit-2509`** (facet E35 Ruling 11, 2026-08-15; its own ruling, per *one ruling per
+  entry, always*). The first entry on a **second checkpoint** — Amendment 2's "exactly one
+  checkpoint" bound day one, and 1.0.0 has shipped. Three measured rungs on the input image's
+  unique-colour count: `2,620 → edit encode CORRUPT` (the native Workbench render, four times),
+  `5,046 → clean` (recorded clay resized locally — killed traversal), `5,336 → clean` (native
+  render lanczos round-tripped — killed framing). **The fault is deterministic**: a verbatim
+  re-submission came back pixel-identical, 0 differing pixels of 1,053,696, while the files'
+  sha256 differ. One lanczos round-trip at native framing repairs it; framing, traversal, alpha,
+  bit depth, colour type, seed and the turbo switch are each exonerated by measurement. **A
+  trigger, not a mechanism**, and **no threshold is stated between 2,620 and 5,046** — where the
+  boundary lies was never measured. Record locator: experiment E35,
+  `docs/experiments/E35-D1-report.md` + `E35-E-report.md` sections D1/E1/E2, ruled in at
+  `E35-ruling.md` Rulings 9 and 11, measured 2026-08-15.
+- ⚠ **A boundary shipped as documentation rather than as a check.** That entry's operand is a
+  property of the referenced **image file**, not a graph input, and comfy-preflight does not
+  decode images (check 5's standing boundary: *dimensions in, verdict out*). So check 8
+  **declines** on this ladder by construction, on every graph — *"the rungs were reported against
+  nothing rather than against a guess"* — and the entry lands in the table and the handbook
+  anyway, because the table is documentation before it is a lookup. **No check was invented to
+  reach it.** The named future shape, uncommissioned, is check 5's: an injected
+  `input_unique_colours` parameter on the submit path. Pinned by a can-fail test that fires if a
+  later seat wires the property in or turns the decline into a guess.
 - **The first `STUDIO_MEASURED` envelope entry — E35's denoise sweep on
   `Qwen-Image-InstantX-ControlNet-Union`** (spec Amendment 5, ruled by the Director at Gate R,
   2026-08-14). The capability shipped empty at 1.0.0 because no measured entry ships until the
