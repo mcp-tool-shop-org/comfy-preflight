@@ -61,6 +61,19 @@ def main() -> int:
         ("pytest (-O, assert-stripped)", [py, "-O", "-m", "pytest", "-q"], None),
         ("pytest (PYTHONOPTIMIZE=1)", [py, "-m", "pytest", "-q"], {"PYTHONOPTIMIZE": "1"}),
     ]
+    # ci.yml sets COVERAGE_LEG to 'true' on the one cell whose reports go to Codecov.
+    # There the normal leg also measures coverage and writes JUnit results, both at the
+    # root, for the workflow to hand on. The two assert-stripped legs stay as they are so
+    # each file is written once. Coverage is reported, never held: no --cov-fail-under.
+    if os.environ.get("COVERAGE_LEG") == "true":
+        legs[0][1].extend(
+            [
+                "--cov=comfy_preflight",
+                "--cov-report=term",
+                f"--cov-report=xml:{ROOT / 'coverage.xml'}",
+                f"--junitxml={ROOT / 'junit.xml'}",
+            ]
+        )
     for label, argv, env in legs:
         ok, _ = run(label, argv, env=env)
         if not ok:
