@@ -65,7 +65,7 @@
       "confidence": "low",
       "highWater": null,
       "name": "root",
-      "qualifyingSourceCommits": 1,
+      "qualifyingSourceCommits": 2,
       "rebaseline": null
     },
     {
@@ -108,7 +108,9 @@
         "collapsed": false,
         "confidence": "low",
         "importsAndCoChanges": [],
-        "importsOnly": []
+        "importsOnly": [
+          "root"
+        ]
       },
       "cohesion": null,
       "cohesionDropped": false,
@@ -144,8 +146,8 @@
         "path": ".gitattributes"
       },
       {
-        "commits": 6,
-        "lines": 148,
+        "commits": 9,
+        "lines": 357,
         "path": ".github/workflows/ci.yml"
       },
       {
@@ -230,8 +232,38 @@
       },
       {
         "commits": 1,
+        "lines": 86,
+        "path": "atlas/README.md"
+      },
+      {
+        "commits": 1,
+        "lines": 34,
+        "path": "atlas/boundaries.yaml"
+      },
+      {
+        "commits": 1,
+        "lines": 285,
+        "path": "atlas/page.json"
+      },
+      {
+        "commits": 1,
+        "lines": 952,
+        "path": "atlas/statistics.json"
+      },
+      {
+        "commits": 1,
+        "lines": 2380,
+        "path": "atlas/structure.json"
+      },
+      {
+        "commits": 1,
         "lines": 30,
         "path": "bin/comfy-preflight.js"
+      },
+      {
+        "commits": 2,
+        "lines": 36,
+        "path": "codecov.yml"
       },
       {
         "commits": 4,
@@ -269,8 +301,8 @@
         "path": "package.json"
       },
       {
-        "commits": 4,
-        "lines": 75,
+        "commits": 6,
+        "lines": 79,
         "path": "pyproject.toml"
       },
       {
@@ -894,23 +926,23 @@
         "path": "tools/import_fixtures.py"
       },
       {
-        "commits": 1,
-        "lines": 156,
+        "commits": 3,
+        "lines": 182,
         "path": "verify.py"
       }
     ]
   },
   "confidence": {
     "level": "low",
-    "reason": "fewer than 20 source files reach 10 revisions in the window"
+    "reason": "fewer than 25 source files reach 10 revisions in the window"
   },
-  "generatedAt": "2026-09-25T09:34:21.074Z",
+  "generatedAt": "2026-09-30T20:09:16.187Z",
   "generatedFrom": {
-    "commit": "93d683ce7e99265b9940fa7cde40ba54d7ce311d"
+    "commit": "d8e49117af15c22fdf29f39cb5ee2989fe0e8c3e"
   },
   "pairs": [],
   "parameters": {
-    "appliedChangesetLimit": 38,
+    "appliedChangesetLimit": 39.5,
     "changeset": 50,
     "changesetFraction": 0.25,
     "cohesionDrop": 0.2,
@@ -919,16 +951,16 @@
     "floor": "fallen",
     "floorHeld": false,
     "floorTrigger": "revision-depth",
-    "headDate": "2026-09-17T18:54:21-07:00",
-    "inScopeFiles": 152,
+    "headDate": "2026-09-29T16:48:48-07:00",
+    "inScopeFiles": 158,
     "pinnedStart": null,
-    "priorFloor": null,
-    "qualifyingCommits": 35,
+    "priorFloor": "fallen",
+    "qualifyingCommits": 38,
     "qualifyingMinimum": 30,
     "revisions": 5,
     "shared": 10,
     "sharedFloorUsed": 3,
-    "since": "2026-03-22T01:54:21.000Z",
+    "since": "2026-04-02T23:48:48.000Z",
     "sourceExtensions": [
       ".js",
       ".mjs",
