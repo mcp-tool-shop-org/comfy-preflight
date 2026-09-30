@@ -9,7 +9,7 @@
       "externals": 0,
       "files": [
         {
-          "hash": "e626814334ce3aac118ba966d81e3f41cf4304a3be58bec665acce705840363f",
+          "hash": "3a094e0e41b2cafc7a34f5b80d1b8a9409aa8db6ca907ac6386054f5394554ed",
           "path": ".github/workflows/ci.yml"
         },
         {
@@ -73,6 +73,12 @@
             "draw_graph",
             "main",
             "shade"
+          ],
+          "failurePaths": [
+            {
+              "kind": "raise",
+              "line": 424
+            }
           ],
           "hash": "90f45d88093b35ec2cdcb4cb9ba713479e18871a868b47a8488dd19788764245",
           "path": "docs/brand/make_logo.py"
@@ -183,6 +189,10 @@
           "path": "SHIP_GATE.md"
         },
         {
+          "hash": "59ca3f6a5be96b80fee73bebf2b778211208d17cd3fb82e2134608dff0729c76",
+          "path": "codecov.yml"
+        },
+        {
           "hash": "e3e1dff62eed817b9dc0f9c1005643aed7e3f2d7f55bf99bdfe17079fe261141",
           "path": "package-lock.json"
         },
@@ -191,7 +201,7 @@
           "path": "package.json"
         },
         {
-          "hash": "1d1ddcec10bf43eff14fbc7d20d7cf1c0b9e5bbaad5fce3c9c98f419b247c326",
+          "hash": "70ca6d4c7097b1c7b7e75e89c92addb3f638a22bae7aa121b755edc75530762f",
           "path": "pyproject.toml"
         },
         {
@@ -201,7 +211,18 @@
             "main",
             "run"
           ],
-          "hash": "5e236d54bc315be9bf076960f8bf6f459a39914d18316f4479779b192fc890fb",
+          "failurePaths": [
+            {
+              "in": "main",
+              "kind": "except",
+              "line": 137
+            },
+            {
+              "kind": "raise",
+              "line": 169
+            }
+          ],
+          "hash": "f5144f6a500962ce14cf0c9f74d243356fd5e5f0f11e085729405b0f4ca50c6b",
           "path": "verify.py",
           "sequences": []
         }
@@ -295,6 +316,14 @@
         },
         {
           "hash": "391533713539035d3c92282579d43de0f137067867fdb502d7eaea3c74601d2a",
+          "importOrder": [
+            "site/src/styles/global.css",
+            "site/src/site-config.ts"
+          ],
+          "importsFiles": [
+            "site/src/site-config.ts",
+            "site/src/styles/global.css"
+          ],
           "path": "site/src/pages/index.astro"
         },
         {
@@ -325,7 +354,7 @@
       "unresolvedSites": 0
     },
     {
-      "dynamicReads": 1,
+      "dynamicReads": 0,
       "dynamicSpawns": 0,
       "dynamicSpawnsInTests": 0,
       "dynamicWrites": 0,
@@ -347,6 +376,13 @@
             "asserts_are_stripped",
             "bare_assert_fires"
           ],
+          "failurePaths": [
+            {
+              "in": "bare_assert_fires",
+              "kind": "except",
+              "line": 36
+            }
+          ],
           "hash": "897e47844f3d562fdea463c431bcd8a665be546aa2d8449caf63ef4467c46dcb",
           "path": "src/comfy_preflight/_assert_probe.py"
         },
@@ -355,6 +391,13 @@
           "entryRule": 4,
           "exports": [
             "preflight"
+          ],
+          "failurePaths": [
+            {
+              "in": "preflight",
+              "kind": "raise",
+              "line": 199
+            }
           ],
           "hash": "21a23690bed4b5693a7c232297f5b45e5e6b648c46ec9879f2f1884426c30fe6",
           "importsFiles": [
@@ -423,6 +466,13 @@
           "exports": [
             "check_link_topology"
           ],
+          "failurePaths": [
+            {
+              "in": "check_link_topology",
+              "kind": "raise",
+              "line": 170
+            }
+          ],
           "hash": "cc24d3c281de279a9cc18cd748c35403ecef56972930b2b5b43ca2d04b717e39",
           "importsFiles": [
             "src/comfy_preflight/errors.py",
@@ -476,6 +526,13 @@
           "exports": [
             "check_register_scan"
           ],
+          "failurePaths": [
+            {
+              "in": "check_register_scan",
+              "kind": "raise",
+              "line": 358
+            }
+          ],
           "hash": "7d58dfc69e058688797cebe1fe4623549a33176d567d795fc11b0ab5cd2ad971",
           "importsFiles": [
             "src/comfy_preflight/errors.py",
@@ -488,6 +545,13 @@
           "exports": [
             "check_saved_is_submitted"
           ],
+          "failurePaths": [
+            {
+              "in": "check_saved_is_submitted",
+              "kind": "raise",
+              "line": 173
+            }
+          ],
           "hash": "3eedeed13d0c8e6f43ca1fdebbba921aed233463607c1797aed9b9284b6c48a6",
           "importsFiles": [
             "src/comfy_preflight/errors.py",
@@ -499,6 +563,13 @@
           "exports": [
             "check_generator_legal_frame",
             "declared_dimensions"
+          ],
+          "failurePaths": [
+            {
+              "in": "check_generator_legal_frame",
+              "kind": "raise",
+              "line": 264
+            }
           ],
           "hash": "b8188a823a3535df232bd69fea92cc63001b60a5c3fcd22d127fc156afd3f67d",
           "importsFiles": [
@@ -527,6 +598,102 @@
             "build_parser",
             "main"
           ],
+          "failurePaths": [
+            {
+              "in": "_read_json",
+              "kind": "raise",
+              "line": 74
+            },
+            {
+              "in": "_read_json",
+              "kind": "except",
+              "line": 77
+            },
+            {
+              "in": "_read_json",
+              "kind": "raise",
+              "line": 78
+            },
+            {
+              "in": "_load_graph",
+              "kind": "except",
+              "line": 85
+            },
+            {
+              "in": "_load_graph",
+              "kind": "raise",
+              "line": 88
+            },
+            {
+              "in": "_parse_dims",
+              "kind": "raise",
+              "line": 95
+            },
+            {
+              "in": "_parse_dims",
+              "kind": "except",
+              "line": 98
+            },
+            {
+              "in": "_parse_dims",
+              "kind": "raise",
+              "line": 99
+            },
+            {
+              "in": "_parse_consumer",
+              "kind": "raise",
+              "line": 106
+            },
+            {
+              "in": "_load_register",
+              "kind": "except",
+              "line": 113
+            },
+            {
+              "in": "_load_register",
+              "kind": "raise",
+              "line": 114
+            },
+            {
+              "in": "_load_schema",
+              "kind": "raise",
+              "line": 127
+            },
+            {
+              "in": "_load_schema",
+              "kind": "raise",
+              "line": 131
+            },
+            {
+              "in": "main",
+              "kind": "except",
+              "line": 295
+            },
+            {
+              "in": "main",
+              "kind": "except",
+              "line": 302
+            },
+            {
+              "in": "main",
+              "kind": "except",
+              "line": 305
+            },
+            {
+              "in": "main",
+              "kind": "raise",
+              "line": 309
+            },
+            {
+              "in": "_run_check",
+              "kind": "except",
+              "line": 346
+            },
+            {
+              "kind": "raise",
+              "line": 360
+            }
+          ],
           "hash": "202dc972b4e31511838c4972320d9207f00e74e9b7a01672830ae6fcfdea0804",
           "importsFiles": [
             "src/comfy_preflight/__init__.py",
@@ -534,6 +701,7 @@
             "src/comfy_preflight/checks/c1_link_topology.py",
             "src/comfy_preflight/errors.py",
             "src/comfy_preflight/graph.py",
+            "src/comfy_preflight/mcp_server.py",
             "src/comfy_preflight/register.py",
             "src/comfy_preflight/registry.py"
           ],
@@ -753,6 +921,133 @@
             "keys_of",
             "parameters_of"
           ],
+          "failurePaths": [
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 124
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 129
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 135
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 140
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 164
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 202
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 207
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 213
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 219
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 282
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 287
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 289
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 318
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 323
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 367
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 371
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 377
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 383
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 390
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 397
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 403
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 410
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 418
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 426
+            },
+            {
+              "in": "index",
+              "kind": "raise",
+              "line": 494
+            }
+          ],
           "hash": "40bac521a5e1c40d4991f0941f9fb707685d44daa6cbe503ddbdb9543898925b",
           "path": "src/comfy_preflight/envelope.py"
         },
@@ -760,12 +1055,36 @@
           "exports": [
             "merge_verdicts"
           ],
+          "failurePaths": [
+            {
+              "in": "__init__",
+              "kind": "raise",
+              "line": 125
+            }
+          ],
           "hash": "9e4193d01622df1bdb3211fcfa41e81f0bdf2f85e01a385322e341c0bd2fe5bf",
           "path": "src/comfy_preflight/errors.py"
         },
         {
           "exports": [
             "is_link"
+          ],
+          "failurePaths": [
+            {
+              "in": "from_api_dict",
+              "kind": "raise",
+              "line": 88
+            },
+            {
+              "in": "from_api_dict",
+              "kind": "raise",
+              "line": 98
+            },
+            {
+              "in": "from_api_dict",
+              "kind": "raise",
+              "line": 139
+            }
           ],
           "hash": "2b71fd72c205bc8801ef636ac5a7296526f3c24d0cd89777eefdc4a76076a31c",
           "importsFiles": [
@@ -779,6 +1098,52 @@
             "main",
             "run_preflight"
           ],
+          "failurePaths": [
+            {
+              "in": "_server_class",
+              "kind": "except",
+              "line": 80
+            },
+            {
+              "in": "_server_class",
+              "kind": "raise",
+              "line": 81
+            },
+            {
+              "in": "run_preflight",
+              "kind": "raise",
+              "line": 114
+            },
+            {
+              "in": "run_preflight",
+              "kind": "raise",
+              "line": 123
+            },
+            {
+              "in": "run_preflight",
+              "kind": "except",
+              "line": 142
+            },
+            {
+              "in": "_parse_graph",
+              "kind": "except",
+              "line": 155
+            },
+            {
+              "in": "_parse_graph",
+              "kind": "raise",
+              "line": 156
+            },
+            {
+              "in": "main",
+              "kind": "except",
+              "line": 185
+            },
+            {
+              "kind": "raise",
+              "line": 195
+            }
+          ],
           "hash": "249d5076ac304b5b27571ff905866bc04af46e28f9b18b43cb4dfc1e729d2f1d",
           "importsFiles": [
             "src/comfy_preflight/__init__.py",
@@ -791,12 +1156,71 @@
           "path": "src/comfy_preflight/mcp_server.py"
         },
         {
+          "failurePaths": [
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 74
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 79
+            },
+            {
+              "in": "__post_init__",
+              "kind": "raise",
+              "line": 86
+            },
+            {
+              "in": "from_dict",
+              "kind": "raise",
+              "line": 109
+            },
+            {
+              "in": "from_dict",
+              "kind": "raise",
+              "line": 114
+            },
+            {
+              "in": "from_dict",
+              "kind": "raise",
+              "line": 120
+            },
+            {
+              "in": "from_dict",
+              "kind": "raise",
+              "line": 126
+            },
+            {
+              "in": "_cards",
+              "kind": "raise",
+              "line": 131
+            },
+            {
+              "in": "from_dict",
+              "kind": "raise",
+              "line": 136
+            },
+            {
+              "in": "from_dict",
+              "kind": "raise",
+              "line": 139
+            }
+          ],
           "hash": "795e16267a77b9c360d11a7c0a8e382c54c08095d2ff417b12fdc2a5a0643ded",
           "path": "src/comfy_preflight/register.py"
         },
         {
           "exports": [
             "registered_numbers"
+          ],
+          "failurePaths": [
+            {
+              "in": "run",
+              "kind": "except",
+              "line": 106
+            }
           ],
           "hash": "0e0599092de6fa358ff93a26ef684ec63c615c6094d30a32fbc6d7943dcc6d62",
           "importsFiles": [
@@ -813,13 +1237,29 @@
           "path": "src/comfy_preflight/registry.py"
         }
       ],
+      "frameworks": [
+        "mcp"
+      ],
       "globs": [
         "src/**"
       ],
       "importConfidence": "full",
       "name": "src",
       "origin": "authored",
+      "outsidePlaces": [
+        {
+          "reads": 5,
+          "where": [
+            "caller"
+          ],
+          "writes": 0
+        }
+      ],
+      "outsideReads": 5,
       "role": "code",
+      "testRunners": [
+        "pytest"
+      ],
       "testedBy": 12,
       "unresolvedSites": 0
     },
@@ -843,7 +1283,8 @@
           "importsFiles": [
             "src/comfy_preflight/graph.py"
           ],
-          "path": "tests/conftest.py"
+          "path": "tests/conftest.py",
+          "testFramework": "pytest"
         },
         {
           "hash": "37feb76b03946a1e09bf89da5f46e04e43904a42aee4914ab7759016482fecc5",
@@ -1180,7 +1621,8 @@
             "src/comfy_preflight/register.py",
             "tests/conftest.py"
           ],
-          "path": "tests/test_aggregate.py"
+          "path": "tests/test_aggregate.py",
+          "testFramework": "pytest"
         },
         {
           "exports": [
@@ -1209,7 +1651,8 @@
             "src/comfy_preflight/errors.py",
             "tests/conftest.py"
           ],
-          "path": "tests/test_c1_link_topology.py"
+          "path": "tests/test_c1_link_topology.py",
+          "testFramework": "pytest"
         },
         {
           "exports": [
@@ -1250,7 +1693,8 @@
             "src/comfy_preflight/register.py",
             "tests/conftest.py"
           ],
-          "path": "tests/test_c2_register.py"
+          "path": "tests/test_c2_register.py",
+          "testFramework": "pytest"
         },
         {
           "exports": [
@@ -1282,7 +1726,8 @@
             "src/comfy_preflight/graph.py",
             "tests/conftest.py"
           ],
-          "path": "tests/test_c4_saved_is_submitted.py"
+          "path": "tests/test_c4_saved_is_submitted.py",
+          "testFramework": "pytest"
         },
         {
           "exports": [
@@ -1320,7 +1765,8 @@
             "src/comfy_preflight/errors.py",
             "tests/conftest.py"
           ],
-          "path": "tests/test_c5_frame.py"
+          "path": "tests/test_c5_frame.py",
+          "testFramework": "pytest"
         },
         {
           "exports": [
@@ -1389,7 +1835,8 @@
             "src/comfy_preflight/graph.py",
             "tests/conftest.py"
           ],
-          "path": "tests/test_c8_envelope.py"
+          "path": "tests/test_c8_envelope.py",
+          "testFramework": "pytest"
         },
         {
           "exports": [
@@ -1431,14 +1878,17 @@
           "importOrder": [
             "tests/conftest.py",
             "src/comfy_preflight/__init__.py",
-            "src/comfy_preflight/cli.py"
+            "src/comfy_preflight/cli.py",
+            "src/comfy_preflight/mcp_server.py"
           ],
           "importsFiles": [
             "src/comfy_preflight/__init__.py",
             "src/comfy_preflight/cli.py",
+            "src/comfy_preflight/mcp_server.py",
             "tests/conftest.py"
           ],
-          "path": "tests/test_cli.py"
+          "path": "tests/test_cli.py",
+          "testFramework": "pytest"
         },
         {
           "exports": [
@@ -1466,7 +1916,8 @@
             "src/comfy_preflight/_assert_probe.py",
             "src/comfy_preflight/errors.py"
           ],
-          "path": "tests/test_errors.py"
+          "path": "tests/test_errors.py",
+          "testFramework": "pytest"
         },
         {
           "exports": [
@@ -1511,6 +1962,7 @@
           "importOrder": [
             "tests/conftest.py",
             "src/comfy_preflight/__init__.py",
+            "src/comfy_preflight/mcp_server.py",
             "src/comfy_preflight/errors.py",
             "src/comfy_preflight/graph.py",
             "src/comfy_preflight/register.py"
@@ -1519,10 +1971,12 @@
             "src/comfy_preflight/__init__.py",
             "src/comfy_preflight/errors.py",
             "src/comfy_preflight/graph.py",
+            "src/comfy_preflight/mcp_server.py",
             "src/comfy_preflight/register.py",
             "tests/conftest.py"
           ],
-          "path": "tests/test_mcp_surface.py"
+          "path": "tests/test_mcp_surface.py",
+          "testFramework": "pytest"
         },
         {
           "exports": [
@@ -1533,7 +1987,11 @@
             "test_this_guard_survives_assert_stripping"
           ],
           "hash": "14dbc90a8dda1ca784453c7194509fe68f90cceadec18d53b281e1028bb3e461",
-          "path": "tests/test_no_assert_in_library.py"
+          "names": [
+            "src/comfy_preflight/_assert_probe.py"
+          ],
+          "path": "tests/test_no_assert_in_library.py",
+          "testFramework": "pytest"
         },
         {
           "exports": [
@@ -1545,6 +2003,9 @@
             "test_version_is_at_least_one_zero_zero"
           ],
           "hash": "920e232304939df9870b09f98146eb801d60a0305fb6701e7c414bd61e5cab37",
+          "names": [
+            "bin/comfy-preflight.js"
+          ],
           "path": "tests/test_packaging.py"
         },
         {
@@ -1571,18 +2032,21 @@
           "importOrder": [
             "tests/conftest.py",
             "src/comfy_preflight/__init__.py",
+            "src/comfy_preflight/aggregate.py",
             "src/comfy_preflight/errors.py",
             "src/comfy_preflight/register.py",
             "src/comfy_preflight/registry.py"
           ],
           "importsFiles": [
             "src/comfy_preflight/__init__.py",
+            "src/comfy_preflight/aggregate.py",
             "src/comfy_preflight/errors.py",
             "src/comfy_preflight/register.py",
             "src/comfy_preflight/registry.py",
             "tests/conftest.py"
           ],
-          "path": "tests/test_registry.py"
+          "path": "tests/test_registry.py",
+          "testFramework": "pytest"
         }
       ],
       "globs": [
@@ -1592,6 +2056,9 @@
       "name": "tests",
       "origin": "mixed",
       "role": "test",
+      "testRunners": [
+        "pytest"
+      ],
       "testedBy": 0,
       "unresolvedNamed": [
         {
@@ -1622,6 +2089,17 @@
             "main",
             "sha256"
           ],
+          "failurePaths": [
+            {
+              "in": "main",
+              "kind": "except",
+              "line": 89
+            },
+            {
+              "kind": "raise",
+              "line": 158
+            }
+          ],
           "hash": "9a5c39ffec4fc987085e81bac1a4d82ce3ffa10585f9334c500080777aaa408f",
           "path": "tools/import_fixtures.py"
         }
@@ -1642,28 +2120,134 @@
       "checksCount": 1,
       "commands": [
         {
+          "dir": "",
           "job": "test",
-          "step": "Atlas check",
-          "text": "npx --yes @dogfood-lab/atlas@1.21.0 check"
+          "programs": [
+            "npx"
+          ],
+          "step": "Atlas check"
         },
         {
+          "dir": "",
           "job": "test",
-          "step": "Install",
-          "text": "python -m pip install -e \".[dev]\" build"
+          "programs": [
+            "python"
+          ],
+          "step": "Install"
         },
         {
+          "dir": "",
           "job": "test",
-          "step": "Verify (suite x3 modes, build, clean-venv smoke)",
-          "text": "python verify.py"
+          "programs": [
+            "python"
+          ],
+          "step": "Verify (suite x3 modes, build, clean-venv smoke)"
         },
         {
+          "dir": "",
           "job": "audit",
-          "step": "pip-audit (declared dependencies + every extra)",
-          "text": "python -m pip install --upgrade pip pip-audit\npython - > /tmp/declared-requirements.txt <<'PY'\nimport pathlib, tomllib\nproject = tomllib.loads(pathlib.Path(\"pyproject.toml\").read_text())[\"project\"]\nseen = []\nfor spec in project.get(\"dependencies\", []):\n    seen.append(spec)\nfor group in project.get(\"optional-dependencies\", {}).values():\n    seen.extend(group)\nprint(\"\\n\".join(dict.fromkeys(seen)))\nPY\necho \"--- auditing ---\"; cat /tmp/declared-requirements.txt\npip-audit --strict -r /tmp/declared-requirements.txt --progress-spinner off\n"
+          "programs": [
+            "cat",
+            "echo",
+            "pip-audit",
+            "python"
+          ],
+          "step": "pip-audit (declared dependencies + every extra)"
         }
       ],
       "elsewhere": [],
       "file": ".github/workflows/ci.yml",
+      "jobs": [
+        {
+          "basis": "declared",
+          "name": "test",
+          "runsOn": [
+            {
+              "labels": [
+                "ubuntu-latest"
+              ],
+              "platform": {
+                "cpu": "x64",
+                "libc": "glibc",
+                "os": "linux"
+              }
+            }
+          ],
+          "setup": [
+            {
+              "ranges": [
+                {
+                  "from": "3.11",
+                  "range": ">=3.11.0 <3.12.0-0"
+                },
+                {
+                  "from": "3.12",
+                  "range": ">=3.12.0 <3.13.0-0"
+                }
+              ],
+              "step": "1",
+              "uses": "actions/setup-python",
+              "version": "${{ matrix.python-version }}"
+            },
+            {
+              "ranges": [
+                {
+                  "from": "22",
+                  "range": ">=22.0.0 <23.0.0-0"
+                }
+              ],
+              "step": "Set up Node for Atlas",
+              "uses": "actions/setup-node",
+              "version": "22"
+            }
+          ]
+        },
+        {
+          "basis": "declared",
+          "name": "codecov",
+          "runsOn": [
+            {
+              "labels": [
+                "ubuntu-latest"
+              ],
+              "platform": {
+                "cpu": "x64",
+                "libc": "glibc",
+                "os": "linux"
+              }
+            }
+          ]
+        },
+        {
+          "basis": "declared",
+          "name": "audit",
+          "runsOn": [
+            {
+              "labels": [
+                "ubuntu-latest"
+              ],
+              "platform": {
+                "cpu": "x64",
+                "libc": "glibc",
+                "os": "linux"
+              }
+            }
+          ],
+          "setup": [
+            {
+              "ranges": [
+                {
+                  "from": "3.12",
+                  "range": ">=3.12.0 <3.13.0-0"
+                }
+              ],
+              "step": "1",
+              "uses": "actions/setup-python",
+              "version": "3.12"
+            }
+          ]
+        }
+      ],
       "landings": [],
       "mentions": [
         {
@@ -1672,7 +2256,10 @@
         }
       ],
       "name": "CI",
-      "permissions": [],
+      "permissions": [
+        "contents:read",
+        "id-token:write"
+      ],
       "pushes": false,
       "reach": [
         {
@@ -1684,6 +2271,11 @@
           "boundary": "src",
           "depth": 0,
           "files": 16
+        },
+        {
+          "boundary": "tests",
+          "depth": 0,
+          "files": 14
         }
       ],
       "readers": [],
@@ -1696,12 +2288,20 @@
           "via": "verify.py → build pyproject.toml"
         },
         {
+          "directory": true,
+          "job": "test",
+          "matched": true,
+          "path": "tests/",
+          "runKind": "executes",
+          "via": "verify.py → pytest pyproject.toml"
+        },
+        {
           "job": "test",
           "path": "verify.py",
           "runKind": "executes"
         }
       ],
-      "runsCount": 2,
+      "runsCount": 3,
       "secrets": [],
       "sends": {
         "deploysPages": false,
@@ -1714,12 +2314,25 @@
         "releases": false
       },
       "stages": [],
+      "tests": [
+        {
+          "config": "pyproject.toml",
+          "files": 14,
+          "job": "test",
+          "runner": "pytest",
+          "step": "Verify (suite x3 modes, build, clean-venv smoke)",
+          "through": [
+            "verify.py"
+          ]
+        }
+      ],
       "triggers": [
         {
           "event": "pull_request",
           "paths": [
             ".github/workflows/**",
             "atlas/**",
+            "codecov.yml",
             "pyproject.toml",
             "site/astro.config.mjs",
             "site/package-lock.json",
@@ -1734,6 +2347,7 @@
           "paths": [
             ".github/workflows/**",
             "atlas/**",
+            "codecov.yml",
             "pyproject.toml",
             "site/astro.config.mjs",
             "site/package-lock.json",
@@ -1749,8 +2363,11 @@
       ],
       "uses": [
         "actions/checkout",
+        "actions/download-artifact",
         "actions/setup-node",
-        "actions/setup-python"
+        "actions/setup-python",
+        "actions/upload-artifact",
+        "codecov/codecov-action"
       ],
       "usesWorkflowToken": false
     },
@@ -1758,18 +2375,74 @@
       "checksCount": 0,
       "commands": [
         {
+          "dir": "site",
           "job": "build",
-          "step": "Install site dependencies",
-          "text": "npm ci"
+          "programs": [
+            "npm"
+          ],
+          "step": "Install site dependencies"
         },
         {
+          "dir": "site",
           "job": "build",
-          "step": "Build site",
-          "text": "npm run build"
+          "programs": [
+            "npm"
+          ],
+          "step": "Build site"
         }
       ],
       "elsewhere": [],
       "file": ".github/workflows/pages.yml",
+      "jobs": [
+        {
+          "basis": "declared",
+          "name": "build",
+          "runsOn": [
+            {
+              "labels": [
+                "ubuntu-latest"
+              ],
+              "platform": {
+                "cpu": "x64",
+                "libc": "glibc",
+                "os": "linux"
+              }
+            }
+          ],
+          "setup": [
+            {
+              "ranges": [
+                {
+                  "from": "22",
+                  "range": ">=22.0.0 <23.0.0-0"
+                }
+              ],
+              "step": "1",
+              "uses": "actions/setup-node",
+              "version": "22"
+            }
+          ]
+        },
+        {
+          "basis": "declared",
+          "environment": {
+            "name": "github-pages"
+          },
+          "name": "deploy",
+          "runsOn": [
+            {
+              "labels": [
+                "ubuntu-latest"
+              ],
+              "platform": {
+                "cpu": "x64",
+                "libc": "glibc",
+                "os": "linux"
+              }
+            }
+          ]
+        }
+      ],
       "landings": [],
       "mentions": [],
       "name": "Deploy site to GitHub Pages",
@@ -1783,7 +2456,7 @@
         {
           "boundary": "site",
           "depth": 0,
-          "files": 3
+          "files": 5
         }
       ],
       "readers": [],
@@ -1844,63 +2517,195 @@
       "checksCount": 1,
       "commands": [
         {
+          "dir": "",
           "job": "binaries",
-          "step": "Install the package with the mcp extra, and PyInstaller",
-          "text": "python -m pip install --upgrade pip\npython -m pip install \".[mcp]\"\npython -m pip install pyinstaller==6.22.0\n"
+          "programs": [
+            "python"
+          ],
+          "step": "Install the package with the mcp extra, and PyInstaller"
         },
         {
+          "dir": "",
           "job": "binaries",
-          "step": "Build the single-file binary",
-          "text": "pyinstaller --onefile --name comfy-preflight \\\n  --collect-submodules mcp.server \\\n  --exclude-module mcp.cli \\\n  --exclude-module typer \\\n  --exclude-module IPython \\\n  --console --noconfirm \\\n  src/comfy_preflight/cli.py\n"
+          "programs": [
+            "pyinstaller"
+          ],
+          "step": "Build the single-file binary"
         },
         {
+          "dir": "",
           "job": "binaries",
-          "step": "Name it by the launcher's convention",
-          "text": "VERSION=\"${RELEASE_TAG#v}\"\nmkdir -p out\nmv \"dist/comfy-preflight${{ matrix.ext }}\" \\\n   \"out/comfy-preflight-${VERSION}-${{ matrix.label }}${{ matrix.ext }}\"\nls -l out/\n"
+          "programs": [
+            "ls",
+            "mkdir",
+            "mv"
+          ],
+          "step": "Name it by the launcher's convention"
         },
         {
+          "dir": "",
           "job": "binaries",
-          "step": "Smoke-test the binary before it can ever reach a user",
-          "text": "set -euo pipefail\nVERSION=\"${RELEASE_TAG#v}\"\nBIN=\"$PWD/out/comfy-preflight-${VERSION}-${{ matrix.label }}${{ matrix.ext }}\"\nchmod +x \"$BIN\" || true\nmkdir -p /tmp/smoke\ncp tests/fixtures/graphs/facet_next__E12_twins__graphs__workflow_twin_0.json /tmp/smoke/graph.json\ncd /tmp/smoke\n\"$BIN\" --version\n\"$BIN\" check graph.json --json > out.json\npython -c \"import json;d=json.load(open('out.json'));assert d['checks_run']==[1,2,4,5,8],d['checks_run']\"\nrc=0\n\"$BIN\" check graph.json --input-dims 1066x1024 > /dev/null 2>&1 || rc=$?\nif [ \"$rc\" -ne 1 ]; then\n  echo \"::error::the recorded 1066 halt exited $rc, expected 1\" >&2\n  exit 1\nfi\necho \"the binary runs a verb and the 1066 halt still exits 1\"\n"
+          "programs": [
+            "1",
+            "2",
+            "cd",
+            "chmod",
+            "cp",
+            "echo",
+            "mkdir",
+            "python"
+          ],
+          "step": "Smoke-test the binary before it can ever reach a user"
         },
         {
+          "dir": "",
           "job": "release",
-          "step": "Verify tag matches every declared version",
-          "text": "TAG=\"${RELEASE_TAG#v}\"\nPYPROJECT=$(python -c \"import tomllib,pathlib;print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])\")\nPKGJSON=$(node -p \"require('./package.json').version\")\n# Extracted with python, NOT a node one-liner: the obvious node version\n# uses a regex replacement containing $1, and bash expands $1 inside\n# double quotes to an empty positional parameter.\nBINJS=$(python -c \"import re,pathlib;print(re.search(r'version:\\s*\\\"([^\\\"]+)\\\"', pathlib.Path('bin/comfy-preflight.js').read_text()).group(1))\")\nBINTAG=$(python -c \"import re,pathlib;print(re.search(r'tag:\\s*\\\"([^\\\"]+)\\\"', pathlib.Path('bin/comfy-preflight.js').read_text()).group(1))\")\nDUNDER=$(python -c \"import re,pathlib;print(re.search(r'__version__ = \\\"([^\\\"]+)\\\"', pathlib.Path('src/comfy_preflight/__init__.py').read_text()).group(1))\")\nif [ \"$BINTAG\" != \"$RELEASE_TAG\" ]; then\n  echo \"::error::bin/comfy-preflight.js pins tag $BINTAG but this release is $RELEASE_TAG - npm-launcher would fetch the wrong release\"\n  exit 1\nfi\necho \"tag=$TAG pyproject=$PYPROJECT package.json=$PKGJSON bin=$BINJS __version__=$DUNDER\"\nfail=0\nfor pair in \"pyproject:$PYPROJECT\" \"package.json:$PKGJSON\" \"bin/comfy-preflight.js:$BINJS\" \"__init__.py:$DUNDER\"; do\n  name=\"${pair%%:*}\"; val=\"${pair#*:}\"\n  if [ \"$val\" != \"$TAG\" ]; then echo \"::error::$name declares $val but the tag is $TAG\"; fail=1; fi\ndone\n[ \"$fail\" -eq 0 ]\n"
+          "programs": [
+            "echo",
+            "node",
+            "python"
+          ],
+          "step": "Verify tag matches every declared version"
         },
         {
+          "dir": "",
           "job": "release",
-          "step": "Generate checksums",
-          "text": "VERSION=\"${RELEASE_TAG#v}\"\ncd assets\nsha256sum * > \"checksums-${VERSION}.txt\"\ncat \"checksums-${VERSION}.txt\"\n"
+          "programs": [
+            "cat",
+            "cd",
+            "sha256sum"
+          ],
+          "step": "Generate checksums"
         },
         {
+          "dir": "",
           "job": "release",
-          "step": "Verify",
-          "text": "python -m pip install --upgrade pip\npython -m pip install -e \".[dev]\" build\npython verify.py\n"
+          "programs": [
+            "python"
+          ],
+          "step": "Verify"
         },
         {
+          "dir": "",
           "job": "release",
-          "step": "Cut the GitHub Release with binaries + dists",
-          "text": "NOTES=\".github/release-notes-${RELEASE_TAG}.md\"\n# A partial release leaves the GitHub Release already created. Re-creating it would\n# abort the job before the registry publishes that still need to run, so an existing\n# release is uploaded into rather than treated as an error.\nif gh release view \"${RELEASE_TAG}\" >/dev/null 2>&1; then\n  echo \"release ${RELEASE_TAG} already exists; uploading assets into it\"\n  gh release upload \"${RELEASE_TAG}\" assets/* dist/* --clobber\n  exit 0\nfi\nif [ -f \"$NOTES\" ]; then\n  gh release create \"${RELEASE_TAG}\" \\\n    --title \"comfy-preflight ${RELEASE_TAG}\" \\\n    --notes-file \"$NOTES\" --verify-tag assets/* dist/*\nelse\n  gh release create \"${RELEASE_TAG}\" \\\n    --title \"comfy-preflight ${RELEASE_TAG}\" \\\n    --generate-notes --verify-tag assets/* dist/*\nfi\n"
+          "programs": [
+            "1",
+            "echo",
+            "gh"
+          ],
+          "step": "Cut the GitHub Release with binaries + dists"
         },
         {
+          "dir": "",
           "job": "release",
-          "step": "Install npm >=11.5 in a sandbox for OIDC",
-          "text": "SANDBOX=\"$HOME/.npm-cli-sandbox\"\nmkdir -p \"$SANDBOX\"\npushd \"$SANDBOX\" >/dev/null\necho '{\"name\":\"npm-cli-sandbox\",\"version\":\"0.0.0\",\"private\":true}' > package.json\nnpm install --no-save --no-audit --no-fund --silent npm@latest\npopd >/dev/null\necho \"$SANDBOX/node_modules/.bin\" >> \"$GITHUB_PATH\"\n\"$SANDBOX/node_modules/.bin/npm\" --version\n"
+          "programs": [
+            "echo",
+            "mkdir",
+            "npm",
+            "popd",
+            "pushd"
+          ],
+          "step": "Install npm >=11.5 in a sandbox for OIDC"
         },
         {
+          "dir": "",
           "job": "release",
-          "step": "npm pack dry-run (verify tarball shape)",
-          "text": "npm pack --dry-run"
+          "programs": [
+            "npm"
+          ],
+          "step": "npm pack dry-run (verify tarball shape)"
         },
         {
+          "dir": "",
           "job": "release",
-          "step": "Publish to npm with provenance (OIDC trusted publisher)",
-          "text": "npm publish --provenance --access public"
+          "programs": [
+            "npm"
+          ],
+          "step": "Publish to npm with provenance (OIDC trusted publisher)"
         }
       ],
       "elsewhere": [],
       "file": ".github/workflows/release.yml",
+      "jobs": [
+        {
+          "basis": "declared",
+          "name": "binaries",
+          "runsOn": [
+            {
+              "labels": [
+                "ubuntu-latest"
+              ],
+              "platform": {
+                "cpu": "x64",
+                "libc": "glibc",
+                "os": "linux"
+              }
+            },
+            {
+              "labels": [
+                "windows-latest"
+              ],
+              "platform": {
+                "cpu": "x64",
+                "os": "win32"
+              }
+            }
+          ],
+          "setup": [
+            {
+              "ranges": [
+                {
+                  "from": "3.12",
+                  "range": ">=3.12.0 <3.13.0-0"
+                }
+              ],
+              "step": "1",
+              "uses": "actions/setup-python",
+              "version": "3.12"
+            }
+          ]
+        },
+        {
+          "basis": "declared",
+          "name": "release",
+          "runsOn": [
+            {
+              "labels": [
+                "ubuntu-latest"
+              ],
+              "platform": {
+                "cpu": "x64",
+                "libc": "glibc",
+                "os": "linux"
+              }
+            }
+          ],
+          "setup": [
+            {
+              "ranges": [
+                {
+                  "from": "3.12",
+                  "range": ">=3.12.0 <3.13.0-0"
+                }
+              ],
+              "step": "1",
+              "uses": "actions/setup-python",
+              "version": "3.12"
+            },
+            {
+              "ranges": [
+                {
+                  "from": "22",
+                  "range": ">=22.0.0 <23.0.0-0"
+                }
+              ],
+              "step": "2",
+              "uses": "actions/setup-node",
+              "version": "22"
+            }
+          ]
+        }
+      ],
       "landings": [],
       "mentions": [
         {
@@ -1936,6 +2741,11 @@
           "boundary": "src",
           "depth": 0,
           "files": 16
+        },
+        {
+          "boundary": "tests",
+          "depth": 0,
+          "files": 14
         }
       ],
       "readers": [],
@@ -1954,12 +2764,20 @@
           "runKind": "executes"
         },
         {
+          "directory": true,
+          "job": "release",
+          "matched": true,
+          "path": "tests/",
+          "runKind": "executes",
+          "via": "verify.py → pytest pyproject.toml"
+        },
+        {
           "job": "release",
           "path": "verify.py",
           "runKind": "executes"
         }
       ],
-      "runsCount": 3,
+      "runsCount": 4,
       "secrets": [
         "GITHUB_TOKEN"
       ],
@@ -1988,6 +2806,23 @@
         "releases": true
       },
       "stages": [],
+      "tests": [
+        {
+          "job": "binaries",
+          "runner": null,
+          "step": "Smoke-test the binary before it can ever reach a user"
+        },
+        {
+          "config": "pyproject.toml",
+          "files": 14,
+          "job": "release",
+          "runner": "pytest",
+          "step": "Verify",
+          "through": [
+            "verify.py"
+          ]
+        }
+      ],
       "triggers": [
         {
           "event": "push",
@@ -2066,7 +2901,7 @@
         {
           "boundary": "src",
           "depth": 0,
-          "files": 13
+          "files": 14
         }
       ],
       "readers": [],
@@ -2096,15 +2931,21 @@
   ],
   "edges": [
     {
+      "from": "root",
+      "kind": "spawns",
+      "to": "tests"
+    },
+    {
       "from": "tests",
       "fromTests": true,
       "kind": "file",
       "to": "src"
     }
   ],
+  "engine": "1.24.0",
   "generatedFrom": {
-    "commit": "93d683ce7e99265b9940fa7cde40ba54d7ce311d",
-    "tracked": 152
+    "commit": "d8e49117af15c22fdf29f39cb5ee2989fe0e8c3e",
+    "tracked": 153
   },
   "landings": [
     {
@@ -2156,7 +2997,8 @@
     {
       "readers": [
         {
-          "by": ".github/workflows/release.yml"
+          "by": ".github/workflows/release.yml",
+          "confidence": "config"
         },
         {
           "by": "package-lock.json",
@@ -2182,7 +3024,8 @@
     {
       "readers": [
         {
-          "by": ".github/workflows/release.yml"
+          "by": ".github/workflows/release.yml",
+          "confidence": "config"
         },
         {
           "by": "tests/test_packaging.py",
@@ -2203,10 +3046,12 @@
     {
       "readers": [
         {
-          "by": ".github/workflows/ci.yml"
+          "by": ".github/workflows/ci.yml",
+          "confidence": "config"
         },
         {
-          "by": ".github/workflows/release.yml"
+          "by": ".github/workflows/release.yml",
+          "confidence": "config"
         },
         {
           "by": "tests/test_errors.py",
@@ -2289,6 +3134,12 @@
           "call": "literal",
           "confidence": "ast",
           "fromTests": true
+        },
+        {
+          "by": "tests/test_no_assert_in_library.py",
+          "call": "read_text",
+          "confidence": "ast",
+          "fromTests": true
         }
       ],
       "target": "src/comfy_preflight/_assert_probe.py",
@@ -2348,7 +3199,8 @@
     {
       "readers": [
         {
-          "by": ".github/workflows/release.yml"
+          "by": ".github/workflows/release.yml",
+          "confidence": "config"
         },
         {
           "by": "verify.py",
