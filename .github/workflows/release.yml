@@ -253,7 +253,7 @@ jobs:
       # would die on PyPI's "version already exists" before ever reaching npm, and the tag
       # cannot be moved once a registry has seen it.
       - name: Publish to PyPI (OIDC trusted publishing)
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
         with:
           skip-existing: true
 
