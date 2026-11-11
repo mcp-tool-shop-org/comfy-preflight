@@ -1,18 +1,16 @@
 # comfy-preflight: how it works
 
-Mapped at 2026-09-30 from commit d8e4911 by Atlas 1.24.0.
+Mapped at 2026-11-11 from commit ee223cd by Atlas 1.26.0.
 
 ## What this is
 
 8 parts, mostly Python (33 files), CSS (2), JavaScript (2), TypeScript (2) and Astro (1). Work enters through 5 doors; CI and Release each reach 3 parts, and CI is followed because a pull request goes through it. It publishes to npm and PyPI. It deploys a site to GitHub Pages. People run comfy-preflight.
 
-## What changed since 2026-09-25 (93d683c)
+## What changed since 2026-09-30 (d8e4911)
 
-- CI's pull request trigger now also names `codecov.yml`.
-- CI's push trigger now also names `codecov.yml`.
-- CI now also runs tests/.
-- And 1 more change to a door.
-- 1 file added and 3 changed content, across 2 parts.
+- src/comfy_preflight/**/*.py is now read by tests/test_no_assert_in_library.py.
+- tests/**/*.py is now read by tests/test_fixtures_are_self_contained.py.
+- 3 files changed content, across 2 parts.
 
 ## What comes in
 
@@ -78,9 +76,11 @@ People write .github/, docs/, the repository root and site/; 1 write with a path
 
 ## Where to start
 
-src/comfy_preflight/cli.py → src/comfy_preflight/graph.py → src/comfy_preflight/register.py → src/comfy_preflight/checks/c1_link_topology.py → src/comfy_preflight/aggregate.py → src/comfy_preflight/__init__.py
+src/comfy_preflight/cli.py → src/comfy_preflight/graph.py → src/comfy_preflight/errors.py
 
 Read those in order to follow one run of comfy-preflight end to end. This path follows comfy-preflight (a command people run, from pyproject.toml) from its entry, since CI runs only tests, scripts that import no code here and checks.
+
+Beside the path, src/comfy_preflight/cli.py also calls src/comfy_preflight/register.py, src/comfy_preflight/checks/c1_link_topology.py, src/comfy_preflight/aggregate.py and src/comfy_preflight/__init__.py.
 
 ## What this map cannot see
 
