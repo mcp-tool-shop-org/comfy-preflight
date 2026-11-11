@@ -9,7 +9,7 @@
       "externals": 0,
       "files": [
         {
-          "hash": "3a094e0e41b2cafc7a34f5b80d1b8a9409aa8db6ca907ac6386054f5394554ed",
+          "hash": "4bfcbaa13fc95f26567dfbe8ad7b4749115c10e927510cb3b46d25527b2bb309",
           "path": ".github/workflows/ci.yml"
         },
         {
@@ -17,7 +17,7 @@
           "path": ".github/workflows/pages.yml"
         },
         {
-          "hash": "fbd187ce71d3291cc9bcfda92c165ea1e5b34c1e33375281dbe12deb8e931e6b",
+          "hash": "f593a61a4011f383c4a1a5abc4147290485d8cf62b8ddc7b21a1da78b40532f2",
           "path": ".github/workflows/release.yml"
         }
       ],
@@ -250,7 +250,7 @@
           "path": "site/astro.config.mjs"
         },
         {
-          "hash": "af5d4f54dca60686724d306eb58759fb25b6f5ba4d66559ab84a968112a184e5",
+          "hash": "0607a19c4f60b635244a906c7ad2424359b50e20c4a83bc140f202abce4a941e",
           "path": "site/package-lock.json"
         },
         {
@@ -2942,9 +2942,9 @@
       "to": "src"
     }
   ],
-  "engine": "1.24.0",
+  "engine": "1.26.0",
   "generatedFrom": {
-    "commit": "d8e49117af15c22fdf29f39cb5ee2989fe0e8c3e",
+    "commit": "ee223cd2289c2ccff81bd822e03a4e2b781f5c35",
     "tracked": 153
   },
   "landings": [
@@ -3118,6 +3118,18 @@
     {
       "readers": [
         {
+          "by": "tests/test_no_assert_in_library.py",
+          "call": "read_text",
+          "confidence": "ast",
+          "fromTests": true
+        }
+      ],
+      "target": "src/comfy_preflight/**/*.py",
+      "writers": []
+    },
+    {
+      "readers": [
+        {
           "by": "tests/test_packaging.py",
           "call": "read_text",
           "confidence": "ast",
@@ -3166,6 +3178,24 @@
           "fromTests": true
         }
       ],
+      "target": "tests/**/*.py",
+      "writers": []
+    },
+    {
+      "mayReaders": [
+        {
+          "by": "tools/import_fixtures.py",
+          "pattern": "**/*.json"
+        }
+      ],
+      "readers": [
+        {
+          "by": "tests/test_fixtures_are_self_contained.py",
+          "call": "read_text",
+          "confidence": "ast",
+          "fromTests": true
+        }
+      ],
       "target": "tests/fixtures/MANIFEST.json",
       "writers": [
         {
@@ -3175,12 +3205,25 @@
       ]
     },
     {
+      "mayReaders": [
+        {
+          "by": "tools/import_fixtures.py",
+          "pattern": "**/*.json"
+        }
+      ],
       "readers": [
         {
           "by": "tests/conftest.py",
           "call": "glob",
           "confidence": "ast",
           "fromTests": true
+        },
+        {
+          "by": "tests/conftest.py",
+          "call": "glob",
+          "confidence": "ast",
+          "fromTests": true,
+          "pattern": "tests/fixtures/graphs/*.json"
         },
         {
           "by": "tools/import_fixtures.py",
