@@ -128,6 +128,10 @@ claramente que não pode julgá-lo e por quê.
 Relatar o valor que não pode julgar é a metade honesta da descoberta. Inventar uma faixa para julgá-lo
 seria a metade desonesta.
 
+**Onde o fornecedor não documenta nada, uma medição pode responder.** Uma medição é uma segunda entrada na tabela, com autoridade própria. Ela nunca é mesclada com a primeira entrada. A chave da tabela é `(checkpoint, parameter)`, portanto um parâmetro pode ter as duas entradas. Para este checkpoint, o cartão do modelo não documenta nenhuma faixa para `denoise`. Um experimento do estúdio também mediu vários valores de `denoise` neste checkpoint. Ele constatou que **o estilo visual se perde antes que as manchinhas desapareçam**: a contagem de manchinhas chega a zero em `0.72`, mas apenas porque 56% da imagem voltou em direção à sua imagem inicial. Um grafo de workflow que usa este checkpoint recebe os valores medidos mais próximos, a receita com a qual esses valores foram medidos e a citação do experimento. Isso acontece com qualquer valor de `denoise` que o grafo use.
+
+Uma entrada medida aponta para um registro de experimento que pode ser recuperado, da mesma forma que uma entrada citada aponta para uma URL. Uma medição não é uma recomendação. Os valores medidos dizem o que aconteceu nesses valores, com uma única receita. Eles não dizem nada sobre os valores entre eles. Portanto, a verificação apenas emite um aviso, e um aviso termina com o código `0`.
+
 ## O contrato de adoção
 
 **Chame-o de em processo no caminho de envio. Não há sinalizador de ignorar.**
