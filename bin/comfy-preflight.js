@@ -2,8 +2,8 @@
 "use strict";
 
 // Pure JSON config — npm-launcher derives the asset names from convention:
-//   binary:    comfy-preflight-1.0.0-linux-x64  /  comfy-preflight-1.0.0-win-x64.exe
-//   checksums: checksums-1.0.0.txt
+//   binary:    comfy-preflight-1.1.0-linux-x64  /  comfy-preflight-1.1.0-win-x64.exe
+//   checksums: checksums-1.1.0.txt
 // It downloads from the GitHub Release for `tag`, verifies SHA256, caches, and
 // execs with argv passthrough.
 //
@@ -23,8 +23,8 @@ process.env.MCPTOOLSHOP_LAUNCH_CONFIG = JSON.stringify({
   toolName: "comfy-preflight",
   owner: "mcp-tool-shop-org",
   repo: "comfy-preflight",
-  version: "1.0.0",
-  tag: "v1.0.0",
+  version: "1.1.0",
+  tag: "v1.1.0",
 });
 
 require("@mcptoolshop/npm-launcher/bin/mcptoolshop-launch.js");

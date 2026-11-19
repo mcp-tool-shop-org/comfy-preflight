@@ -9,6 +9,10 @@
       "externals": 0,
       "files": [
         {
+          "hash": "2d3f0d210dfb54ef763c19b52b08f3b96f00fa7b4d12d19d17ecae06eab01b68",
+          "path": ".github/release-notes-v1.1.0.md"
+        },
+        {
           "hash": "4bfcbaa13fc95f26567dfbe8ad7b4749115c10e927510cb3b46d25527b2bb309",
           "path": ".github/workflows/ci.yml"
         },
@@ -42,7 +46,7 @@
       "externals": 0,
       "files": [
         {
-          "hash": "33cf361dc5ae7e2f2000ea421a11906daf38d119c427b333d3bf600f03f23376",
+          "hash": "30fcc62f02d974a7a3c203ca59a9592adf43146564bfe00819ff60403747ba89",
           "path": "bin/comfy-preflight.js"
         }
       ],
@@ -137,7 +141,7 @@
           "path": ".gitignore"
         },
         {
-          "hash": "f8f148d01f9d67472f0917e338a1f9c9ac9fb6d5fad3fb8c6fdfb1b45b29435f",
+          "hash": "f3f51343f3bc3f094e731127f256437f78b8c96b8e01e3072b5add030a14b7a6",
           "path": "CHANGELOG.md"
         },
         {
@@ -193,15 +197,15 @@
           "path": "codecov.yml"
         },
         {
-          "hash": "e3e1dff62eed817b9dc0f9c1005643aed7e3f2d7f55bf99bdfe17079fe261141",
+          "hash": "3cec510464fd652548d625059e4779a921a70d29bc5726b146469f12bf3fff50",
           "path": "package-lock.json"
         },
         {
-          "hash": "15cab29bf305cb1ad3f75834c6c7db90caea7f1d1c71a95720e66822b1d3dbf4",
+          "hash": "1d6e0a493b085362f93d5ecc5004d086ea6505af90570d15eb99d51ccd500e32",
           "path": "package.json"
         },
         {
-          "hash": "70ca6d4c7097b1c7b7e75e89c92addb3f638a22bae7aa121b755edc75530762f",
+          "hash": "1c8f80e6139708c22fc1e5bf59f185c6f990a46df8f3796cca1a5c7bcded28e6",
           "path": "pyproject.toml"
         },
         {
@@ -364,7 +368,7 @@
       "externals": 0,
       "files": [
         {
-          "hash": "78a740651342b77bcd6ef89ae71d335f4440a3f3bb898591a850ec2f939ce6ce",
+          "hash": "043c61812ef897570227592fcb324d1211179b74e4a415fdae5af576789e62fa",
           "importsFiles": [
             "src/comfy_preflight/aggregate.py",
             "src/comfy_preflight/errors.py"
@@ -2944,8 +2948,8 @@
   ],
   "engine": "1.26.0",
   "generatedFrom": {
-    "commit": "0c02cb2b36430ea2d12d2cd526a2980f2dce9bf8",
-    "tracked": 153
+    "commit": "07c681ff93b2de2f74b55aab145993d0a6dc1f23",
+    "tracked": 154
   },
   "landings": [
     {
