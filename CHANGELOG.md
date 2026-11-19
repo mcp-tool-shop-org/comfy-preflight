@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this pr
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-19
+
+The first two `STUDIO_MEASURED` envelope entries, measured in August 2026 and unreleased until now. The envelope table shipped empty of measured entries at 1.0.0.
+
 ### Added
 - **The second `STUDIO_MEASURED` envelope entry — E35's quantisation trigger on
   `qwen-image-edit-2509`** (facet E35 Ruling 11, 2026-08-15; its own ruling, per *one ruling per

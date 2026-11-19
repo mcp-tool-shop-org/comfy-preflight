@@ -11,7 +11,7 @@ path**, and let it raise. See the README's build-state table for which checks it
 table is the honest state of this repo.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 from comfy_preflight.aggregate import PreflightResult, preflight
 from comfy_preflight.errors import Defect, PreflightHalt, Verdict, merge_verdicts
