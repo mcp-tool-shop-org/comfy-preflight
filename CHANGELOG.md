@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this pr
 
 ## [Unreleased]
 
+### Fixed
+- **The seven translated READMEs carry the two paragraphs on measured entries.** `README.md` gained them with the first `STUDIO_MEASURED` entry (2026-08-14), after the translations were made, so `README.es.md`, `README.fr.md`, `README.hi.md`, `README.it.md`, `README.ja.md`, `README.pt-BR.md` and `README.zh.md` had been stale since 1.0.0. Translated locally with TranslateGemma 27B from a plain-English rendering of the same content, then corrected by hand.
+
 ## [1.1.0] - 2026-11-19
 
 The first two `STUDIO_MEASURED` envelope entries, measured in August 2026 and unreleased until now. The envelope table shipped empty of measured entries at 1.0.0.

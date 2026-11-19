@@ -127,6 +127,10 @@ clairement qu'elle ne peut pas le juger et pourquoi.
 Signaler la valeur qu'elle ne peut pas juger est la moitié honnête de la découverte. Inventer une bande pour la juger
 serait la moitié malhonnête.
 
+**Là où le fournisseur ne documente rien, une mesure peut répondre.** Une mesure est une deuxième entrée dans la table, avec sa propre autorité. Elle n’est jamais fusionnée avec la première entrée. La clé de la table est `(checkpoint, parameter)`, de sorte qu’un paramètre peut avoir les deux entrées. Pour ce checkpoint, la fiche du modèle ne documente aucune plage pour `denoise`. Une expérience du studio a aussi mesuré plusieurs valeurs de `denoise` sur ce checkpoint. Elle a constaté que **le style visuel se perd avant que les taches ne disparaissent** : le nombre de taches atteint zéro à `0.72`, mais seulement parce que 56 % de l’image est revenu vers son image de départ. Un graphe de workflow qui utilise ce checkpoint reçoit les valeurs mesurées les plus proches, la recette avec laquelle ces valeurs ont été mesurées et la référence de l’expérience. Cela se produit quelle que soit la valeur de `denoise` utilisée par le graphe.
+
+Une entrée mesurée renvoie à un enregistrement d’expérience qui peut être retrouvé, de la même manière qu’une entrée citée renvoie à une URL. Une mesure n’est pas une recommandation. Les valeurs mesurées disent ce qui s’est passé à ces valeurs, avec une seule recette. Elles ne disent rien des valeurs intermédiaires. La vérification ne donne donc qu’un avis, et un avis se termine avec le code `0`.
+
 ## Le contrat d'adoption
 
 **Appelez-le en cours sur le chemin de soumission. Il n'y a pas de drapeau d'omission.**

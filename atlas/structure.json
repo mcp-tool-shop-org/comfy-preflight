@@ -141,7 +141,7 @@
           "path": ".gitignore"
         },
         {
-          "hash": "f3f51343f3bc3f094e731127f256437f78b8c96b8e01e3072b5add030a14b7a6",
+          "hash": "57056afd43bcce1f6d77c16b0f80bd05b8aa1476c40948955d09a0b74a622709",
           "path": "CHANGELOG.md"
         },
         {
@@ -149,23 +149,23 @@
           "path": "LICENSE"
         },
         {
-          "hash": "e642b03025a465778608b724a429e333bac495e64255a8ee3ca006c2134e1beb",
+          "hash": "3dbf2cc2801de98938ab6bf46dfd5a1bcf9d7c2b77899fd898e1eff21de0a117",
           "path": "README.es.md"
         },
         {
-          "hash": "125131f69a947f711de04dc8a117d81ddb361d05568bf06c5f5fd6d0c2d4c1d0",
+          "hash": "5b99c14810eb597ef70d92e953663be65a825885e470a2b91a62d6796373dbb5",
           "path": "README.fr.md"
         },
         {
-          "hash": "fc7434edd8b7d0d32d7514e078253cde5aea70b9c7664c0bc510168697b31756",
+          "hash": "a78eded4aa732c26b8cccc363fd1e3c6f59a92e7f426fe97d2e3cd6a59df0194",
           "path": "README.hi.md"
         },
         {
-          "hash": "00ec5af05cfb5afb92a15f84eaf3729c5f96b831f5ba6117fc1c3add8021c911",
+          "hash": "7173b8855c89bd34b3531f35139877d6517fc69e41f0ee8788549ff23f6c0978",
           "path": "README.it.md"
         },
         {
-          "hash": "92ea5fea257613e13ee17206408b1bf65b35d2b5da7bf160c21d52543cb5ef78",
+          "hash": "a5bf2918d157ebb590544fafc8229821c366503f7bf04bd31a825b7b7e75fa93",
           "path": "README.ja.md"
         },
         {
@@ -173,11 +173,11 @@
           "path": "README.md"
         },
         {
-          "hash": "3a6c3f5df28ed8a1996d2b5b00b3c6d61ad7215f1697d21920b953183c0774d6",
+          "hash": "eb785bcca599b45929fa0701e68cb3011efd0989af915e166150a3cc2741178a",
           "path": "README.pt-BR.md"
         },
         {
-          "hash": "2155fc83ff54783f2d847882d53b996246cfb5e7d6240d5067532c97bfde3730",
+          "hash": "4588bf9f2ea084cf332bb7d04da077830e03f12fed9f8414407a255e211a5b04",
           "path": "README.zh.md"
         },
         {
@@ -2948,7 +2948,7 @@
   ],
   "engine": "1.26.0",
   "generatedFrom": {
-    "commit": "07c681ff93b2de2f74b55aab145993d0a6dc1f23",
+    "commit": "3463703abcf5a676e144f2fff8281c024374868a",
     "tracked": 154
   },
   "landings": [

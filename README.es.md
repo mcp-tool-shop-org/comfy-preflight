@@ -124,6 +124,10 @@ claramente que no puede juzgarlo y por qué.
 
 Informar del valor que no puede juzgar es la mitad honesta del hallazgo. Inventar una banda para juzgarlo sería la mitad deshonesta.
 
+**Donde el proveedor no documenta nada, una medición puede responder.** Una medición es una segunda entrada en la tabla, con su propia autoridad. Nunca se fusiona con la primera entrada. La clave de la tabla es `(checkpoint, parameter)`, por lo que un parámetro puede tener ambas entradas. Para este checkpoint, la ficha del modelo no documenta ningún rango para `denoise`. Un experimento del estudio también midió varios valores de `denoise` en este checkpoint. Encontró que **el estilo visual se pierde antes de que desaparezcan las motas**: el recuento de motas llega a cero en `0.72`, pero solo porque el 56% de la imagen ha vuelto hacia su imagen inicial. A un grafo de flujo de trabajo que usa este checkpoint se le muestran los valores medidos más cercanos, la receta con la que se midieron esos valores y la cita del experimento. Esto ocurre con cualquier valor de `denoise` que use el grafo.
+
+Una entrada medida apunta a un registro de experimento que se puede recuperar, de la misma manera que una entrada citada apunta a una URL. Una medición no es una recomendación. Los valores medidos dicen lo que ocurrió en esos valores, bajo una sola receta. No dicen nada sobre los valores intermedios. Por lo tanto, la comprobación solo emite un aviso, y un aviso termina con el código `0`.
+
 ## El contrato de adopción
 
 **Llamémoslo en proceso en la ruta de envío. No hay ninguna opción de omisión.**

@@ -51,22 +51,22 @@
   ],
   "changes": {
     "fileCounts": {
-      "added": 1,
-      "changed": 6,
+      "added": 0,
+      "changed": 8,
       "moved": 0,
-      "parts": 4,
+      "parts": 1,
       "removed": 0
     },
     "items": [
       {
         "kind": "counts",
-        "sentence": "Nothing structural changed since 2026-11-19; 1 file added and 6 changed content.",
+        "sentence": "Nothing structural changed since 2026-11-19; 8 files changed content.",
         "subjects": []
       }
     ],
     "since": {
-      "commit": "0c02cb2b36430ea2d12d2cd526a2980f2dce9bf8",
-      "generatedAt": "2026-11-19T19:26:03.245Z"
+      "commit": "07c681ff93b2de2f74b55aab145993d0a6dc1f23",
+      "generatedAt": "2026-11-19T19:48:25.935Z"
     },
     "unchanged": true
   },
@@ -75,7 +75,7 @@
     "Window: 180 days; a pair counts from 3 shared commits, since 0 source files reach 10 revisions; the floor rises to 10 when 25 do."
   ],
   "changesTogetherWithTests": 0,
-  "commit": "07c681ff93b2de2f74b55aab145993d0a6dc1f23",
+  "commit": "3463703abcf5a676e144f2fff8281c024374868a",
   "defaultBranch": "main",
   "derived": "8 parts, mostly Python (33 files), CSS (2), JavaScript (2), TypeScript (2) and Astro (1). Work enters through 5 doors; CI and Release each reach 3 parts, and CI is followed because a pull request goes through it. It publishes to npm and PyPI. It deploys a site to GitHub Pages. People run comfy-preflight.",
   "doors": [
@@ -280,7 +280,7 @@
       ]
     }
   ],
-  "generatedAt": "2026-11-19T19:48:25.935Z",
+  "generatedAt": "2026-11-19T20:30:21.370Z",
   "limits": [
     "2 imports could not be resolved: `tests/test_packaging.py` imports a path built at run time, twice.",
     "1 write and 3 reads use paths built at run time and are not named here.",

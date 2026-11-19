@@ -122,6 +122,10 @@ chiaramente che non può giudicarlo e perché.
 
 Segnalare il valore che non può giudicare è la metà onesta della scoperta. Inventare una banda per giudicarlo sarebbe la metà disonesta.
 
+**Dove il fornitore non documenta nulla, una misurazione può rispondere.** Una misurazione è una seconda voce nella tabella, con una propria autorità. Non viene mai unita alla prima voce. La chiave della tabella è `(checkpoint, parameter)`, quindi un parametro può avere entrambe le voci. Per questo checkpoint, la scheda del modello non documenta alcun intervallo per `denoise`. Un esperimento dello studio ha inoltre misurato diversi valori di `denoise` su questo checkpoint. Ha rilevato che **lo stile visivo si perde prima che le macchioline scompaiano**: il numero di macchioline arriva a zero a `0.72`, ma solo perché il 56% dell’immagine è tornato verso la sua immagine di partenza. A un grafo di workflow che usa questo checkpoint vengono mostrati i valori misurati più vicini, la ricetta con cui quei valori sono stati misurati e la citazione dell’esperimento. Questo accade per qualsiasi valore di `denoise` usato dal grafo.
+
+Una voce misurata rimanda a una registrazione dell’esperimento che può essere recuperata, nello stesso modo in cui una voce citata rimanda a un URL. Una misurazione non è una raccomandazione. I valori misurati dicono che cosa è successo a quei valori, con una sola ricetta. Non dicono nulla sui valori intermedi. Perciò il controllo dà soltanto un avviso, e un avviso termina con il codice `0`.
+
 ## Il contratto di adozione
 
 **Chiamalo in corso nel percorso di invio. Non esiste un flag di salto.**
