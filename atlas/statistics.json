@@ -99,7 +99,7 @@
       "confidence": "low",
       "highWater": null,
       "name": "src",
-      "qualifyingSourceCommits": 12,
+      "qualifyingSourceCommits": 13,
       "rebaseline": null
     },
     {
@@ -117,7 +117,7 @@
       "confidence": "low",
       "highWater": null,
       "name": "tests",
-      "qualifyingSourceCommits": 14,
+      "qualifyingSourceCommits": 15,
       "rebaseline": null
     },
     {
@@ -166,8 +166,8 @@
         "path": ".gitignore"
       },
       {
-        "commits": 7,
-        "lines": 214,
+        "commits": 8,
+        "lines": 215,
         "path": "CHANGELOG.md"
       },
       {
@@ -231,8 +231,8 @@
         "path": "SHIP_GATE.md"
       },
       {
-        "commits": 4,
-        "lines": 178,
+        "commits": 5,
+        "lines": 186,
         "path": "atlas/README.md"
       },
       {
@@ -241,18 +241,18 @@
         "path": "atlas/boundaries.yaml"
       },
       {
-        "commits": 4,
-        "lines": 605,
+        "commits": 5,
+        "lines": 637,
         "path": "atlas/page.json"
       },
       {
-        "commits": 4,
-        "lines": 1122,
+        "commits": 5,
+        "lines": 1152,
         "path": "atlas/statistics.json"
       },
       {
-        "commits": 4,
-        "lines": 4393,
+        "commits": 5,
+        "lines": 4405,
         "path": "atlas/structure.json"
       },
       {
@@ -486,8 +486,8 @@
         "path": "src/comfy_preflight/mcp_server.py"
       },
       {
-        "commits": 2,
-        "lines": 184,
+        "commits": 3,
+        "lines": 186,
         "path": "src/comfy_preflight/register.py"
       },
       {
@@ -496,18 +496,18 @@
         "path": "src/comfy_preflight/registry.py"
       },
       {
-        "commits": 1,
-        "lines": 69,
+        "commits": 2,
+        "lines": 71,
         "path": "tests/conftest.py"
       },
       {
-        "commits": 1,
-        "lines": 496,
+        "commits": 2,
+        "lines": 500,
         "path": "tests/fixtures/MANIFEST.json"
       },
       {
-        "commits": 1,
-        "lines": 95,
+        "commits": 2,
+        "lines": 97,
         "path": "tests/fixtures/graphs/E08-anchor-workflow-api.json"
       },
       {
@@ -936,9 +936,9 @@
     "level": "low",
     "reason": "fewer than 25 source files reach 10 revisions in the window"
   },
-  "generatedAt": "2026-11-19T19:08:53.547Z",
+  "generatedAt": "2026-11-19T19:26:03.245Z",
   "generatedFrom": {
-    "commit": "2478f2f219d7f1514d0aba54c9f0919d8fd918b5"
+    "commit": "0c02cb2b36430ea2d12d2cd526a2980f2dce9bf8"
   },
   "pairs": [],
   "parameters": {
@@ -951,16 +951,16 @@
     "floor": "fallen",
     "floorHeld": false,
     "floorTrigger": "revision-depth",
-    "headDate": "2026-11-11T18:34:11-05:00",
+    "headDate": "2026-11-19T14:08:56-05:00",
     "inScopeFiles": 158,
     "pinnedStart": null,
     "priorFloor": "fallen",
-    "qualifyingCommits": 42,
+    "qualifyingCommits": 43,
     "qualifyingMinimum": 30,
     "revisions": 5,
     "shared": 10,
     "sharedFloorUsed": 3,
-    "since": "2026-05-15T23:34:11.000Z",
+    "since": "2026-05-23T19:08:56.000Z",
     "sourceExtensions": [
       ".js",
       ".mjs",

@@ -1,5 +1,5 @@
 {
-  "note": "Recorded ComfyUI API-format workflow graphs, copied from rig-local trees by tools/import_fixtures.py. The test suite reads ONLY the copies in graphs/. The source paths are provenance, not a runtime dependency.",
+  "note": "Recorded ComfyUI API-format workflow graphs, copied from rig-local trees by tools/import_fixtures.py. The test suite reads ONLY the copies in graphs/. The source paths are provenance, not a runtime dependency. One fixture, E08-anchor-workflow-api.json, was redacted after the copy on 2026-11-19 (a personal account name in a LoRA filename became second-account); its sha256 and bytes are those of the redacted file, not of its source.",
   "count": 70,
   "graphs": [
     {

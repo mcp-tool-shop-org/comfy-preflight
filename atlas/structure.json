@@ -137,7 +137,7 @@
           "path": ".gitignore"
         },
         {
-          "hash": "961f273012779821650712fb05b556035af864b14434471c3670ec583ecdd99a",
+          "hash": "f8f148d01f9d67472f0917e338a1f9c9ac9fb6d5fad3fb8c6fdfb1b45b29435f",
           "path": "CHANGELOG.md"
         },
         {
@@ -1287,7 +1287,7 @@
           "testFramework": "pytest"
         },
         {
-          "hash": "07f6df38078bdc7c857a1d9ee847e1764bef0d8e63234e9a5dc37cf29c659ba4",
+          "hash": "b4ed9b65cc386d2677f05940fde82ec634fd49a49fe9c8fb4c0e4e2a031c6b80",
           "path": "tests/fixtures/MANIFEST.json"
         },
         {
@@ -2093,14 +2093,14 @@
             {
               "in": "main",
               "kind": "except",
-              "line": 89
+              "line": 95
             },
             {
               "kind": "raise",
-              "line": 158
+              "line": 173
             }
           ],
-          "hash": "9a5c39ffec4fc987085e81bac1a4d82ce3ffa10585f9334c500080777aaa408f",
+          "hash": "8a108c2010741dbd7d3cc4bec24e1fafdc35f3c96d18c559c385f374ca8289de",
           "path": "tools/import_fixtures.py"
         }
       ],
@@ -2944,7 +2944,7 @@
   ],
   "engine": "1.26.0",
   "generatedFrom": {
-    "commit": "2478f2f219d7f1514d0aba54c9f0919d8fd918b5",
+    "commit": "0c02cb2b36430ea2d12d2cd526a2980f2dce9bf8",
     "tracked": 153
   },
   "landings": [

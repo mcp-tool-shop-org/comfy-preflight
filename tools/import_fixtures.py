@@ -42,6 +42,12 @@ SOURCES = [
 ]
 
 
+# Fixtures edited by hand AFTER the import (a personal account name redacted from a LoRA filename,
+# 2026-11-19). Their sources still carry the original text, so a re-import would put it back.
+# This tool refuses to overwrite them; redact the source, or change this set on purpose.
+REDACTED_AFTER_IMPORT = frozenset({"E08-anchor-workflow-api.json"})
+
+
 def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -121,6 +127,15 @@ def main() -> int:
     if args.check:
         print("--check: nothing written")
         return 0
+
+    blocked = sorted(e["fixture"] for e in entries if e["fixture"] in REDACTED_AFTER_IMPORT)
+    if blocked:
+        print(
+            f"ERROR: refusing to re-import {blocked}: redacted after import, and the source "
+            "still carries the unredacted text (see REDACTED_AFTER_IMPORT)",
+            file=sys.stderr,
+        )
+        return 4
 
     DEST.mkdir(parents=True, exist_ok=True)
     for entry in entries:
