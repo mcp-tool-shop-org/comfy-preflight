@@ -33,7 +33,7 @@ CORPUS_CARD = (
     "mcp-tool-shop__saltroad-style-lora__saltroad_style_v2_lowlr_000001500.safetensors"
 )
 CORPUS_CARD_ALIAS = (
-    "mikeyfrilot__saltroad-lora__saltroad_style_v2_lowlr_000001500.safetensors"
+    "second-account__saltroad-lora__saltroad_style_v2_lowlr_000001500.safetensors"
 )
 CORPUS_CARDS = frozenset({CORPUS_CARD, CORPUS_CARD_ALIAS})
 

@@ -19,7 +19,7 @@
     "class_type": "LoraLoaderModelOnly",
     "inputs": {
       "model": ["1", 0],
-      "lora_name": "mikeyfrilot__saltroad-lora__saltroad_style_v2_lowlr_000001500.safetensors",
+      "lora_name": "second-account__saltroad-lora__saltroad_style_v2_lowlr_000001500.safetensors",
       "strength_model": 0.75
     }
   },
