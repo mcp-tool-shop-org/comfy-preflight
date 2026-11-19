@@ -158,7 +158,7 @@ class AdapterRegister:
         same LoRA appears as
 
             mcp-tool-shop__saltroad-style-lora__saltroad_style_v2_lowlr_000001500.safetensors
-            mikeyfrilot__saltroad-lora__saltroad_style_v2_lowlr_000001500.safetensors
+            second-account__saltroad-lora__saltroad_style_v2_lowlr_000001500.safetensors
 
         — identical weights, different cloud-side namespace prefix from a re-import under a
         different account. Exact-string comparison halts a correct build in that case, and the
