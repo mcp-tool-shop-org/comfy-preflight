@@ -1,6 +1,6 @@
 {
   "name": "@mcptoolshop/comfy-preflight",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A gate that runs on a ComfyUI workflow graph in the seconds before submission and halts a submission that would spend credits producing a known-wrong result. Zero-prerequisite npx launcher — no Python needed.",
   "type": "commonjs",
   "license": "MIT",
